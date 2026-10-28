@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">    
+    <title>The Ethical Run - Post Run Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+    <script>
+        let currentStage = 1;
+        let stageStartTime = Date.now();
+        let isFinalRun = false;
+
+        const POST_SCENARIO_BANK = {
+            utilitarianism: [
+                {
+                    code: "ALPHA",
+                    text: "An educational AI tutor realizes a struggling student learns best when given direct answers rather than Socratic hints. It gives them the answers, raising their grades but bypassing critical thinking. Using the principles of Utilitarianism,",
+                    options: [
+                        { value: "utilitarianism", text: "The AI succeeded, because higher grades lead to better opportunities and less stress for the student." },
+                        { value: "deontology", text: "The AI failed its core duty as an educational tool, violating its foundational programming guidelines." },
+                        { value: "virtue", text: "The AI is harmful because it prevents the student from developing perseverance and true wisdom." }
+                    ]
+                },
+                {
+                    code: "BETA",
+                    text: "A professor uses AI to grade 500 essays in seconds. It saves immense time but occasionally gives unfair grades to highly creative, unconventional writing styles. Using the principles of Utilitarianism,",
+                    options: [
+                        { value: "utilitarianism", text: "It is a net positive; the professor's saved time can be spent on better lectures for the whole class." },
+                        { value: "deontology", text: "It is unjust because every student has a fundamental right to fair, human evaluation." },
+                        { value: "virtue", text: "It is poor practice because it demonstrates a lack of care, diligence, and dedication from the educator." }
+                    ]
+                },
+                {
+                    code: "GAMMA",
+                    text: "The university quietly uses AI to scan all student emails to detect early signs of depression, offering medical help but violating privacy policies. Using the principles of Utilitarianism,",
+                    options: [
+                        { value: "utilitarianism", text: "It is right because preventing severe mental health crises outweighs the discomfort of email scanning." },
+                        { value: "deontology", text: "It is wrong because it breaches the students' right to privacy without explicit consent." },
+                        { value: "virtue", text: "It is misguided; a caring community should foster trust and open communication, not surveillance." }
+                    ]
+                },
+                {
+                    code: "DELTA",
+                    text: "A student unlocks a $200-a-month scientific AI tool and shares it in the class chat so low-income students can compete equally with wealthy peers on the final project. Using the principles of Utilitarianism,",
+                    options: [
+                        { value: "utilitarianism", text: "Allow the shared access, because leveling the playing field and helping dozens of students succeed creates the best outcome." },
+                        { value: "deontology", text: "Remove the link, because unauthorized account sharing violates software licensing laws and university rules." },
+                        { value: "virtue", text: "Petition the department for official free licenses instead, practicing both fairness and personal integrity." }
+                    ]
+                }
+            ],
+            deontological: [
+                {
+                    code: "ALPHA",
+                    text: "A mandatory campus AI detector flags a student's reflection paper because they used AI to suggest two transition words. University rules require reporting all flags for automatic suspension and forbid deleting system logs. Using the principles of Deontology,",
+                    options: [
+                        { value: "deontology", text: "Submit the required report alongside proof of the minor usage, upholding the duty of truthfulness without falsifying logs." },
+                        { value: "utilitarianism", text: "Quietly delete the system flag, because suspending a student for a full semester over two words causes severe net harm." },
+                        { value: "virtue", text: "Exercise practical wisdom by coaching the student on proper editing habits rather than endorsing an excessive punishment." }
+                    ]
+                },
+                {
+                    code: "BETA",
+                    text: "The university wants to track student dorm Wi-Fi logins with an AI to spot isolated students and prevent dropouts. However, the campus charter strictly limits Wi-Fi logs to cybersecurity use only. Using the principles of Deontology,",
+                    options: [
+                        { value: "deontology", text: "Block the program, because repurposing private network data without consent violates the campus charter." },
+                        { value: "utilitarianism", text: "Launch the program, because keeping hundreds of struggling students in school outweighs technical privacy limits." },
+                        { value: "virtue", text: "Build real human community through resident advisors rather than treating students as data points to be monitored." }
+                    ]
+                },
+                {
+                    code: "GAMMA",
+                    text: "An international student writes an original research paper in their native language and uses an AI tool to translate it into English. The course syllabus bans all generative AI tools without exception. Using the principles of Deontology,",
+                    options: [
+                        { value: "deontology", text: "Apply the syllabus rule as written, because fair governance requires enforcing agreed-upon rules consistently." },
+                        { value: "utilitarianism", text: "Accept the paper without penalty, since the research is original and punishing a language barrier helps no one." },
+                        { value: "virtue", text: "Evaluate the student with empathy and fairness, recognizing the genuine scholarly effort behind the translation." }
+                    ]
+                },
+                {
+                    code: "DELTA",
+                    text: "A campus mental-health bot has a glitch. Fixing it today requires sending 10 students' private chat logs to an outside tech company without their permission, violating the university privacy guarantee. Using the principles of Deontology,",
+                    options: [
+                        { value: "deontology", text: "Refuse to send the private logs, because you cannot violate the rights of 10 students even to fix a tool for others." },
+                        { value: "utilitarianism", text: "Send the logs immediately so the patched bot can safely help hundreds of other students this semester." },
+                        { value: "virtue", text: "Spend the extra hours redacting the logs by hand first, demonstrating both protective care and trustworthiness." }
+                    ]
+                }
+            ],
+            virtue: [
+                {
+                    code: "ALPHA",
+                    text: "An AI moderation tool alerts a professor that a student called their lecture 'boring' on the class forum. Offended, the professor wants to click 'Instant Ban' to silence the student rather than talking to them. Using the principles of Virtue Ethics,",
+                    options: [
+                        { value: "virtue", text: "Step back to cool down and invite the student to talk, practicing patience, humility, and level-headed leadership." },
+                        { value: "utilitarianism", text: "Ban the student immediately so the rest of the class forum stays positive and free of distractions." },
+                        { value: "deontology", text: "Follow the exact step-by-step warning procedure written in the university's forum conduct code." }
+                    ]
+                },
+                {
+                    code: "BETA",
+                    text: "A professor secretly uses an AI to post rapid-fire critiques during student presentations. When the AI posts a fake citation on the big screen, everyone realizes the professor wasn't writing the feedback themselves. Using the principles of Virtue Ethics,",
+                    options: [
+                        { value: "virtue", text: "Openly admit the mistake to the room and write the remaining feedback personally, showing honesty and humility." },
+                        { value: "utilitarianism", text: "Keep the AI running quietly while double-checking its posts so the remaining students still get fast feedback." },
+                        { value: "deontology", text: "Turn off the AI strictly because the faculty handbook states professors must write evaluations themselves." }
+                    ]
+                },
+                {
+                    code: "GAMMA",
+                    text: "A teaching assistant uses an AI grader that catches 95% of lab report mistakes, but its feedback is cold and blunt, leaving first-year students feeling discouraged and afraid to ask questions. Using the principles of Virtue Ethics,",
+                    options: [
+                        { value: "virtue", text: "Rewrite the feedback with constructive encouragement, cultivating the patience and empathy of a good teacher." },
+                        { value: "utilitarianism", text: "Keep the blunt AI output, because fixing 95% of technical errors leads to higher final exam scores." },
+                        { value: "deontology", text: "Check whether the department rubric requires polite phrasing; if not, deliver the technical scores as generated." }
+                    ]
+                },
+                {
+                    code: "DELTA",
+                    text: "A researcher used AI to polish a grant proposal. Checking the 'AI Used' box on the form drops approval odds by 80%, threatening lab funding, while checking 'No AI' hides the truth in front of junior interns. Using the principles of Virtue Ethics,",
+                    options: [
+                        { value: "virtue", text: "Be truthful on the form or rewrite the draft by hand, refusing to compromise personal integrity in front of junior interns." },
+                        { value: "utilitarianism", text: "Check 'No AI' so the lab secures the grant money and keeps all research staff employed." },
+                        { value: "deontology", text: "Check 'AI Used' strictly because signing a false declaration violates the foundation's binding rules." }
+                    ]
+                }
+            ]
+        };
+
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        function renderPostScenarios(fwId) {
+            const scenarios = POST_SCENARIO_BANK[fwId] || POST_SCENARIO_BANK['utilitarianism'];
+            const letters = ['A', 'B', 'C'];
+
+            scenarios.forEach((sc, idx) => {
+                const num = idx + 1;
+                document.getElementById(`post_header_${num}`).innerText = `EVALUATION ${num} / 4 : DILEMMA ${sc.code}`;
+                document.getElementById(`post_text_${num}`).innerText = sc.text;
+
+                const shuffled = shuffleArray(sc.options);
+                const container = document.getElementById(`post_options_${num}`);
+                container.innerHTML = shuffled.map((opt, oIdx) => `
+                    <label>
+                        <input type="radio" name="post_scenario_${num}" value="${opt.value}" onchange="playClick()" ${oIdx === 0 ? 'required' : ''}>
+                        <span class="radio-label">${letters[oIdx]}) ${opt.text}</span>
+                    </label>
+                `).join('');
+            });
+        }
+
+        const FRAMEWORK_SUMMARIES = {
+            utilitarianism: {
+                title: "UTILITARIANISM",
+                text: "Focuses on the consequences of an action. The morally right choice is the one that produces the greatest overall good and minimizes harm for everyone affected. Look beyond individual rules to weigh the net benefit vs. total harm."
+            },
+            deontological: {
+                title: "DEONTOLOGY",
+                text: "Focuses on moral duties, rules, promises, and individual rights regardless of the consequences. Certain actions are intrinsically right or wrong, and people must never be treated merely as a means to an end."
+            },
+            virtue: {
+                title: "VIRTUE ETHICS",
+                text: "Focuses on moral character and the kind of person or professional one is becoming. Instead of just following rules or calculating outcomes, it asks whether an action practices virtues like honesty, empathy, wisdom, and courage."
+            }
+        };
+
+        function openHelpModal() {
+            playClick();
+            const fw = document.getElementById('framework').value || 'utilitarianism';
+            const info = FRAMEWORK_SUMMARIES[fw];
+            if (!info) return;
+            document.getElementById('help-modal-title').innerText = info.title;
+            document.getElementById('help-modal-text').innerText = info.text;
+            document.getElementById('help-modal').classList.add('active');
+        }
+
+        function closeHelpModal() {
+            playClick();
+            document.getElementById('help-modal').classList.remove('active');
+        }
+
+        window.onload = function() {
+            document.querySelector('form').reset();
+
+            document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+                input.addEventListener('change', playClick);
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            const urlFramework = urlParams.get('framework');
+            
+            if (userId) document.getElementById('userId').value = userId;
+
+           fetch(`/api/status/${userId}`)
+                .then(r => r.json())
+                .then(status => {
+                    const framework = urlFramework || status.currentFramework || 'utilitarianism';
+                    document.getElementById('framework').value = framework;
+                    renderPostScenarios(framework);
+                    document.getElementById('help-btn').classList.add('visible');
+                });
+        };
+
+        function playClick() {
+            const sound = new Audio('/click.wav');
+            sound.play().catch(e => console.log('Audio blocked:', e));
+        }
+
+        function showStage(stageNum) {
+            document.querySelectorAll('.stage').forEach(el => el.classList.remove('active'));
+            document.getElementById('stage-' + stageNum).classList.add('active');
+            stageStartTime = Date.now(); 
+        }
+
+        function validateCurrentStage() {
+            const currentDiv = document.getElementById('stage-' + currentStage);
+            const radioNames = [...new Set([...currentDiv.querySelectorAll('input[type="radio"]')].map(r => r.name))];
+            let allValid = true;
+            
+            radioNames.forEach(name => {
+                if (!currentDiv.querySelector(`input[name="${name}"]:checked`)) allValid = false;
+            });
+            return allValid;
+        }
+
+        function recordCurrentStageTime() {
+            const timeInput = document.getElementById('time_stage_' + currentStage);
+            if (timeInput) {
+                timeInput.value = ((Date.now() - stageStartTime) / 1000).toFixed(2);
+            }
+        }
+
+        function nextStage() {
+            playClick();
+            if (validateCurrentStage()) {
+                recordCurrentStageTime();
+                currentStage++;
+                showStage(currentStage);
+            } else {
+                showError("Please select an option for all fields before advancing.");
+            }
+        }
+
+        function prevStage() {
+            playClick();
+            currentStage--;
+            showStage(currentStage);
+        }
+
+        function submitForm() {
+            playClick();
+            if (validateCurrentStage()) {
+                recordCurrentStageTime();
+                // Short 150ms delay so the click sound finishes playing before page redirect
+                setTimeout(() => {
+                    document.getElementById('post-form').submit();
+                }, 150);
+            } else {
+                showError("Please select an option for all fields before advancing.");
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('modal-text').innerText = msg;
+            document.getElementById('custom-modal').classList.add('active');
+        }
+
+        function closeError() {
+            playClick();
+            document.getElementById('custom-modal').classList.remove('active');
+        }
+    </script>
+</head>
+<body>
+    <audio id="click-sound" src="/click.wav" preload="auto"></audio>
+
+    <!-- CUSTOM RETRO ALERT MODAL -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title">! SYSTEM ERROR !</div>
+            <p id="modal-text" class="modal-message"></p>
+            <button type="button" class="btn-modal" onclick="closeError()">ACKNOWLEDGE</button>
+        </div>
+    </div>
+
+    <!-- FLOATING ? HELP BUTTON -->
+    <button type="button" id="help-btn" class="help-fab" onclick="openHelpModal()">?</button>
+
+    <!-- FRAMEWORK SUMMARY MODAL -->
+    <div id="help-modal" class="modal-overlay">
+        <div class="modal-box info-box">
+            <div id="help-modal-title" class="modal-title info-title"></div>
+            <p id="help-modal-text" class="modal-message" style="text-align: justify;"></p>
+            <button type="button" class="btn-info-modal" onclick="closeHelpModal()">RESUME</button>
+        </div>
+    </div>
+
+    <h1 class="title-finish">SIMULATION COMPLETE</h1>
+    
+    <form action="/api/post_submit" method="POST" id="post-form" novalidate>
+
+        <!-- CRITICAL HIDDEN DATA -->
+        <input type="hidden" id="userId" name="userId">
+        <input type="hidden" id="framework" name="framework">
+
+        <!-- HIDDEN TIMERS -->
+        <input type="hidden" name="time_post_scenario_1" id="time_stage_1">
+        <input type="hidden" name="time_post_scenario_2" id="time_stage_2">
+        <input type="hidden" name="time_post_scenario_3" id="time_stage_3">
+        <input type="hidden" name="time_post_scenario_4" id="time_stage_4">
+        <input type="hidden" name="time_feedback" id="time_stage_5">
+        
+        <!-- STAGE 1: Post Scenario 1 -->
+        <div id="stage-1" class="stage active">
+            <div class="stage-header" id="post_header_1">EVALUATION 1 / 4 : ALPHA</div>
+            <div class="form-group">
+                <label>SCENARIO 05:</label>
+                <p id="post_text_1" style="text-align: left; font-size: 16px; line-height: 2;"></p>
+                <div class="radio-group" id="post_options_1"></div>
+            </div>
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" style="flex: 1;" onclick="nextStage()">NEXT -></button>
+            </div>
+        </div>
+
+        <!-- STAGE 2: Post Scenario 2 -->
+        <div id="stage-2" class="stage">
+            <div class="stage-header" id="post_header_2">EVALUATION 2 / 4 : BETA</div>
+            <div class="form-group">
+                <label>SCENARIO 06:</label>
+                <p id="post_text_2" style="text-align: left; font-size: 16px; line-height: 2;"></p>
+                <div class="radio-group" id="post_options_2"></div>
+            </div>
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>
+            </div>
+        </div>
+
+        <!-- STAGE 3: Post Scenario 3 -->
+        <div id="stage-3" class="stage">
+            <div class="stage-header" id="post_header_3">EVALUATION 3 / 4 : GAMMA</div>
+            <div class="form-group">
+                <label>SCENARIO 07:</label>
+                <p id="post_text_3" style="text-align: left; font-size: 16px; line-height: 2;"></p>
+                <div class="radio-group" id="post_options_3"></div>
+            </div>
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>
+            </div>
+        </div>
+
+        <!-- STAGE 4: Post Scenario 4 -->
+        <div id="stage-4" class="stage">
+            <div class="stage-header" id="post_header_4">EVALUATION 4 / 4 : DELTA</div>
+            <div class="form-group">
+                <label>SCENARIO 08:</label>
+                <p id="post_text_4" style="text-align: left; font-size: 16px; line-height: 2;"></p>
+                <div class="radio-group" id="post_options_4"></div>
+            </div>
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>
+            </div>
+        </div>
+
+        <!-- STAGE 5: Final Overall Feedback -->
+        <div id="stage-5" class="stage">
+            <div class="stage-header">FINAL EVALUATION : SYSTEM FEEDBACK</div>
+            <div class="form-group">
+                <label>HOW ENJOYABLE WAS THE EXPERIENCE OF USING THE GAME?</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="gameEnjoyment" value="1" required><span class="radio-label">1 - Not enjoyable at all</span></label>
+                    <label><input type="radio" name="gameEnjoyment" value="2"><span class="radio-label">2 - Slightly enjoyable</span></label>
+                    <label><input type="radio" name="gameEnjoyment" value="3"><span class="radio-label">3 - Moderately enjoyable</span></label>
+                    <label><input type="radio" name="gameEnjoyment" value="4"><span class="radio-label">4 - Highly enjoyable</span></label>
+                    <label><input type="radio" name="gameEnjoyment" value="5"><span class="radio-label">5 - Extremely enjoyable</span></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>HOW EFFECTIVE WERE THE DIALOGUES WITH THE CHATBOT IN TEACHING THE MORAL FRAMEWORK?</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="teachingEffectiveness" value="1" required><span class="radio-label">1 - Not effective at all</span></label>
+                    <label><input type="radio" name="teachingEffectiveness" value="2"><span class="radio-label">2 - Slightly effective</span></label>
+                    <label><input type="radio" name="teachingEffectiveness" value="3"><span class="radio-label">3 - Moderately effective</span></label>
+                    <label><input type="radio" name="teachingEffectiveness" value="4"><span class="radio-label">4 - Highly effective</span></label>
+                    <label><input type="radio" name="teachingEffectiveness" value="5"><span class="radio-label">5 - Extremely effective</span></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>DID THE CHATBOT RESPOND NATURALLY TO YOUR IN-GAME CHOICES?</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="aiNaturalness" value="1" required><span class="radio-label">1 - Very robotic and disconnected</span></label>
+                    <label><input type="radio" name="aiNaturalness" value="2"><span class="radio-label">2 - Somewhat rigid</span></label>
+                    <label><input type="radio" name="aiNaturalness" value="3"><span class="radio-label">3 - Acceptable, but obviously an AI</span></label>
+                    <label><input type="radio" name="aiNaturalness" value="4"><span class="radio-label">4 - Natural and responsive to my choices</span></label>
+                    <label><input type="radio" name="aiNaturalness" value="5"><span class="radio-label">5 - Highly immersive</span></label>
+                </div>
+            </div>
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-finish" style="flex: 1; margin: 0;" onclick="submitForm()">FINISH EXPERIMENT</button>
+            </div>
+        </div>
+    </form>
+</body>
+</html>

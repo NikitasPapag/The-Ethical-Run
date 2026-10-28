@@ -1,0 +1,361 @@
+/* Base Layout & Typography */
+body { 
+    background-color: #121212; 
+    color: #ffffff; 
+    font-family: 'Press Start 2P', monospace; 
+    max-width: 1000px; 
+    margin: 60px auto; 
+    padding: 20px;
+    line-height: 2;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: pixelated;
+}
+
+/* Headings */
+h1 { 
+    text-align: center;
+    font-size: 24px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+}
+
+.title-start {
+    color: #ffd700; 
+    text-shadow: 4px 4px 0px #444;
+}
+
+.title-finish {
+    color: #147832; 
+    text-shadow: 4px 4px 0px #111;
+}
+
+p.subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #aaaaaa;
+    margin-bottom: 40px;
+}
+
+/* Form Containers & Labels */
+.form-group { 
+    background-color: #222222;
+    border: 4px solid #ffffff;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 8px;
+}
+label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #dddddd;
+    line-height: 2;
+}
+
+/* Wide, Readable Pixel Font for Scenarios, Consent Text, Radio Options & Modal Text */
+.form-group p,
+.radio-label,
+.checkbox-container span,
+.modal-message,
+textarea {
+    font-family: 'Silkscreen', 'Courier New', monospace !important;
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0px;
+}
+
+/* Inputs & Textareas */
+input[type="number"], textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #000000;
+    color: #ffffff;
+    border: 2px solid #555555;
+    padding: 15px;
+}
+
+input[type="number"] {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+}
+textarea {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    resize: vertical;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #ffd700;
+}
+textarea:focus {
+    outline: none;
+    border-color: #147832;
+}
+
+/* Buttons */
+button { 
+    display: block;
+    width: 100%;
+    color: #ffffff;
+    border: 6px solid #ffffff;
+    padding: 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    text-transform: uppercase;
+    transition: transform 0.1s, background-color 0.2s;
+}
+
+button:active {
+    transform: translateY(4px); 
+}
+
+.btn-start { background-color: #1e5082; }
+.btn-start:hover { 
+    background-color: #2a6ba8; 
+}
+
+.btn-finish { background-color: #147832; }
+.btn-finish:hover { 
+    background-color: #1c9e42; 
+
+}
+/* Framework Button Colors */
+.btn-fw { margin-bottom: 20px; }
+.btn-util { background-color: #640000; border-color: #ff5555; }
+.btn-util:hover { background-color: #8c0000; }
+.btn-deon { background-color: #006400; border-color: #55ff55; }
+.btn-deon:hover { background-color: #008c00; }
+.btn-virtue { background-color: #000064; border-color: #5555ff; }
+.btn-virtue:hover { background-color: #00008c; }
+
+.hidden { display: none !important; }
+
+/* Pagination & Stages */
+.stage { display: none; animation: fadeIn 0.3s; }
+.stage.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Stage Header */
+.stage-header {
+    text-align: center;
+    color: #aaaaaa;
+    font-size: 16px;
+    margin-bottom: 30px;
+    border-bottom: 2px dashed #555;
+    padding-bottom: 10px;
+}
+
+/* Custom Game-Like Radio Buttons */
+.radio-group { margin-bottom: 30px; }
+.radio-group input[type="radio"] { display: none; }
+.radio-label {
+    display: block;
+    background-color: #000000;
+    border: 3px solid #555555;
+    color: #dddddd;
+    padding: 20px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 2;
+    transition: all 0.2s;
+}
+.radio-label:hover { border-color: #aaaaaa; }
+.radio-group input[type="radio"]:checked + .radio-label {
+    border-color: #ffd700; 
+    background-color: #333333;
+    color: #ffffff;
+    transform: translateX(8px); 
+    box-shadow: -8px 0px 0px #ffd700;}
+
+/* Pagination Buttons */
+.btn-nav-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 30px;
+}
+.btn-nav {
+    flex: 1;
+    background-color: #333333;
+    color: #ffffff;
+    border: 4px solid #ffffff;
+    padding: 15px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+.btn-nav:hover { background-color: #555555; }
+
+/* Consent Checkbox Styling */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    background-color: #000000;
+    border: 3px solid #555555;
+    padding: 20px;
+    margin-bottom: 30px;
+    cursor: pointer;
+    border-radius: 8px;
+    user-select: none;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+.checkbox-container:hover { 
+    border-color: #ffd700; 
+}
+.checkbox-container input[type="checkbox"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: #222222;
+    margin: 0 20px 0 0;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0; /* Prevents text from squishing the checkbox */
+    border: 3px solid #ffffff;
+    border-radius: 4px;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+}
+.checkbox-container input[type="checkbox"]::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    background-color: #ffd700;
+}
+.checkbox-container input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+.checkbox-container input[type="checkbox"]:checked {
+    border-color: #ffd700;
+}
+
+/* Disabled Framework Styling */
+.completed-fw {
+    background-color: #222222 !important;
+    border-color: #444444 !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Custom Retro Error Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.modal-overlay.active {
+    display: flex;
+    animation: fadeIn 0.15s;
+}
+
+.modal-box {
+    background-color: #1a0000;
+    border: 6px solid #ff5555;
+    box-shadow: 8px 8px 0px #440000;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.modal-title {
+    color: #ff5555;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-shadow: 4px 4px 0px #000000;
+}
+
+.modal-message {
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 2;
+    margin-bottom: 30px;
+}
+
+.btn-modal {
+    background-color: #640000;
+    border: 4px solid #ff5555;
+    max-width: 280px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.btn-modal:hover {
+    background-color: #8c0000;
+}
+
+/* Floating Top-Right Help (?) Button */
+.help-fab {
+    display: none;
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    width: 65px;
+    height: 65px;
+    background-color: #1e5082;
+    color: #ffd700;
+    border: 4px solid #ffffff;
+    border-radius: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 28px;
+    padding: 0;
+    z-index: 9000;
+    cursor: pointer;
+    box-shadow: 4px 4px 0px #000000;
+    justify-content: center;
+    align-items: center;
+}
+
+.help-fab.visible {
+    display: flex;
+}
+
+.help-fab:hover {
+    background-color: #2a6ba8;
+    border-color: #ffd700;
+}
+
+/* Info Modal Theme (Blue/Gold to contrast with Red Error Modal) */
+.modal-box.info-box {
+    background-color: #0d1b2a;
+    border-color: #ffd700;
+    box-shadow: 8px 8px 0px #000000;
+}
+
+.modal-title.info-title {
+    color: #ffd700;
+}
+
+.btn-info-modal {
+    background-color: #1e5082;
+    border: 4px solid #ffffff;
+    max-width: 280px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+.btn-info-modal:hover {
+    background-color: #2a6ba8;
+}
