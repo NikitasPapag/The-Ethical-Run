@@ -230,6 +230,32 @@ app.post('/api/chat', async (req, res) => {
     }
 });
 
+// 7. Admin Route to Download All Participant JSON Logs
+app.get('/api/admin/export', (req, res) => {
+    const adminPassword = process.env.ADMIN_KEY || "thesis2026";
+    if (req.query.key !== adminPassword) {
+        return res.status(403).send("Unauthorized: Invalid Admin Key");
+    }
+
+    if (!fs.existsSync(RESULTS_DIR)) {
+        return res.json([]);
+    }
+
+    const files = fs.readdirSync(RESULTS_DIR).filter(file => file.endsWith('.json'));
+    const allData = files.map(file => {
+        const filePath = path.join(RESULTS_DIR, file);
+        try {
+            return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        } catch (e) {
+            return { file, error: "Corrupted JSON" };
+        }
+    });
+
+    res.setHeader('Content-Disposition', 'attachment; filename="all_participants_data.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(allData, null, 2));
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

@@ -359,3 +359,27 @@ button:active {
 .btn-info-modal:hover {
     background-color: #2a6ba8;
 }
+
+@media (max-width: 768px) {
+    body {
+        padding: 15px 10px;
+    }
+    .title-start, .title-finish, .stage-header {
+        font-size: 20px !important;
+        line-height: 1.5;
+    }
+    .form-group {
+        padding: 15px;
+    }
+    .btn-nav-container {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .help-fab {
+        top: 12px;
+        right: 12px;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+}
