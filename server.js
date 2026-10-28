@@ -256,6 +256,109 @@ app.get('/api/admin/export', (req, res) => {
     res.send(JSON.stringify(allData, null, 2));
 });
 
+// 8. Admin Route to Export Flattened CSV for Thesis Statistical Analysis (Excel / SPSS / Python)
+app.get('/api/admin/export-csv', (req, res) => {
+    const adminPassword = process.env.ADMIN_KEY || "thesis2026";
+    if (req.query.key !== adminPassword) {
+        return res.status(403).send("Unauthorized: Invalid Admin Key");
+    }
+
+    if (!fs.existsSync(RESULTS_DIR)) {
+        return res.status(200).send("No data yet.");
+    }
+
+    // Correct answer values per framework in your questionnaire bank
+    const targetValue = {
+        utilitarianism: "utilitarianism",
+        deontological: "deontology",
+        virtue: "virtue"
+    };
+
+    const headers = [
+        "userId", "timestamp", "framework",
+        "age", "major", "aiFrequency", "frameworkExperience",
+        "pre_s1", "pre_s2", "pre_s3", "pre_s4", "pre_score_total",
+        "post_s1", "post_s2", "post_s3", "post_s4", "post_score_total",
+        "learning_gain",
+        "game_completed", "game_duration_sec", "batteries_collected", "answer_score", "hints_used", "chat_turns",
+        "gameEnjoyment", "teachingEffectiveness", "aiNaturalness",
+        "time_demographics", "time_pre_total", "time_post_total", "time_feedback"
+    ];
+
+    const rows = [headers.join(",")];
+    const files = fs.readdirSync(RESULTS_DIR).filter(f => f.endsWith('.json'));
+
+    files.forEach(file => {
+        try {
+            const u = JSON.parse(fs.readFileSync(path.join(RESULTS_DIR, file), 'utf-8'));
+            const demo = u.demographics || {};
+            const runs = u.runs || {};
+
+            Object.keys(runs).forEach(fw => {
+                const r = runs[fw];
+                const pre = r.pre || {};
+                const post = r.post || {};
+                const game = r.gameLogs || {};
+                const fb = r.feedback || u.finalFeedback || {};
+                const expected = targetValue[fw];
+
+                // Calculate Pre & Post accuracy scores (out of 4)
+                const preAns = [pre.scenario_1, pre.scenario_2, pre.scenario_3, pre.scenario_4];
+                const postAns = [post.scenario_1, post.scenario_2, post.scenario_3, post.scenario_4];
+                const preScore = preAns.filter(a => a === expected).length;
+                const postScore = postAns.filter(a => a === expected).length;
+                const learningGain = (r.pre && r.post) ? (postScore - preScore) : "";
+
+                const preTimeTotal = [
+                    pre.time_pre_scenario_1, pre.time_pre_scenario_2,
+                    pre.time_pre_scenario_3, pre.time_pre_scenario_4
+                ].reduce((acc, v) => acc + (parseFloat(v) || 0), 0).toFixed(2);
+
+                const postTimeTotal = [
+                    post.time_post_scenario_1, post.time_post_scenario_2,
+                    post.time_post_scenario_3, post.time_post_scenario_4
+                ].reduce((acc, v) => acc + (parseFloat(v) || 0), 0).toFixed(2);
+
+                const row = [
+                    u.userId || file.replace('.json', ''),
+                    u.createdAt || "",
+                    fw,
+                    demo.age || "",
+                    demo.major || "",
+                    demo.aiFrequency || "",
+                    r.philosophyKnowledge || demo.philosophyKnowledge || "",
+                    pre.scenario_1 || "", pre.scenario_2 || "", pre.scenario_3 || "", pre.scenario_4 || "",
+                    r.pre ? preScore : "",
+                    post.scenario_1 || "", post.scenario_2 || "", post.scenario_3 || "", post.scenario_4 || "",
+                    r.post ? postScore : "",
+                    learningGain,
+                    r.gameLogs ? "true" : "false",
+                    game.durationSeconds || "",
+                    game.totalCollected ?? "",
+                    game.successfulAnswerScoreTotal ?? "",
+                    game.hintsUsed ?? "",
+                    Array.isArray(game.chatLog) ? game.chatLog.length : "",
+                    fb.gameEnjoyment || "",
+                    fb.teachingEffectiveness || "",
+                    fb.aiNaturalness || "",
+                    demo.time_demographics || "",
+                    preTimeTotal,
+                    postTimeTotal,
+                    fb.time_feedback || ""
+                ].map(val => `"${String(val).replace(/"/g, '""')}"`);
+
+                rows.push(row.join(","));
+            });
+        } catch (err) {
+            console.error(`Error parsing ${file}:`, err);
+        }
+    });
+
+    res.setHeader('Content-Disposition', 'attachment; filename="thesis_experiment_metrics.csv"');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.send(rows.join("\n"));
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
