@@ -9,6 +9,54 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const RESULTS_DIR = path.join(__dirname, 'data', 'results');
 
+const { MongoClient } = require('mongodb');
+
+let participantsCollection = null;
+
+async function initDatabase() {
+    if (!process.env.MONGODB_URI) {
+        console.log("No MONGODB_URI found — using local disk storage only.");
+        return;
+    }
+    try {
+        const client = new MongoClient(process.env.MONGODB_URI);
+        await client.connect();
+        const db = client.db('ethical_run_db');
+        participantsCollection = db.collection('participants');
+        console.log("Connected to MongoDB Atlas!");
+
+        // Restore any cloud records back into local data/results/ on server boot/wake-up
+        const allDocs = await participantsCollection.find({}).toArray();
+        allDocs.forEach(doc => {
+            const { _id, ...cleanData } = doc;
+            const filePath = path.join(RESULTS_DIR, `${cleanData.userId}.json`);
+            fs.writeFileSync(filePath, JSON.stringify(cleanData, null, 2));
+        });
+        console.log(`Synced ${allDocs.length} participant logs from MongoDB to local disk.`);
+    } catch (err) {
+        console.error("MongoDB connection error:", err.message);
+    }
+}
+initDatabase();
+
+// Helper function to save to both local disk AND MongoDB Atlas
+async function saveParticipantData(userId, userData) {
+    const filePath = path.join(RESULTS_DIR, `${userId}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(userData, null, 2));
+
+    if (participantsCollection) {
+        try {
+            await participantsCollection.updateOne(
+                { userId: userId },
+                { $set: userData },
+                { upsert: true }
+            );
+        } catch (err) {
+            console.error(`Failed to sync ${userId} to MongoDB:`, err.message);
+        }
+    }
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -18,7 +66,7 @@ if (!fs.existsSync(RESULTS_DIR)) {
 }
 
 // 1. Landing Page: Generate ID and start loop
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     res.redirect(`/pre_questionnaire.html?userId=${uuidv4()}`);
 });
 
@@ -46,7 +94,7 @@ app.get('/api/status/:userId', (req, res) => {
 });
 
 // 3. Submit Pre-Questionnaire
-app.post('/api/pre_submit', (req, res) => {
+app.post('/api/pre_submit', async (req, res) => {
     const { 
         userId, 
         framework, 
@@ -61,8 +109,9 @@ app.post('/api/pre_submit', (req, res) => {
     
     const userFile = path.join(RESULTS_DIR, `${userId}.json`);
     
-    let userData = { runs: {} };
+    let userData = { userId, createdAt: new Date().toISOString(), runs: {} };
     if (fs.existsSync(userFile)) userData = JSON.parse(fs.readFileSync(userFile));
+    userData.userId = userId;
 
     // Save demographics (and their timers) once on the first run
     if (age && major) {
@@ -92,13 +141,13 @@ app.post('/api/pre_submit', (req, res) => {
     userData.runs[framework].philosophyKnowledge = philosophyKnowledge;
     userData.runs[framework].pre = scenarios;
 
-    fs.writeFileSync(userFile, JSON.stringify(userData, null, 2));
+    await saveParticipantData(userId, userData);
     
     res.redirect(`/game/index.html?userId=${userId}&framework=${framework}`);
 });
 
 // 4. Game Logs Hook
-app.post('/api/gamelogs', (req, res) => {
+app.post('/api/gamelogs', async (req, res) => {
     const { userId, logs } = req.body;
     const userFile = path.join(RESULTS_DIR, `${userId}.json`);
     
@@ -113,12 +162,12 @@ app.post('/api/gamelogs', (req, res) => {
     if (!userData.runs[framework]) userData.runs[framework] = {};
     
     userData.runs[framework].gameLogs = logs;
-    fs.writeFileSync(userFile, JSON.stringify(userData, null, 2));
+    await saveParticipantData(userId, userData);
     res.json({ success: true });
 });
 
 // 5. Submit Post-Questionnaire & Loop Logic
-app.post('/api/post_submit', (req, res) => {
+app.post('/api/post_submit', async (req, res) => {
     const {
         userId,
         framework: bodyFw,
@@ -160,7 +209,7 @@ app.post('/api/post_submit', (req, res) => {
         }
     }
 
-    fs.writeFileSync(userFile, JSON.stringify(userData, null, 2));
+    await saveParticipantData(userId, userData);
 
     // Check how many of the 3 valid frameworks have a completed post-questionnaire
     const completed = ['utilitarianism', 'deontological', 'virtue'].filter(
