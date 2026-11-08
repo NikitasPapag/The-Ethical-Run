@@ -25,14 +25,37 @@ async function initDatabase() {
         participantsCollection = db.collection('participants');
         console.log("Connected to MongoDB Atlas!");
 
-        // Restore any cloud records back into local data/results/ on server boot/wake-up
+        // Only download logs that don't exist locally OR were updated more recently in MongoDB
         const allDocs = await participantsCollection.find({}).toArray();
+        let newOrUpdatedCount = 0;
+
         allDocs.forEach(doc => {
             const { _id, ...cleanData } = doc;
+            if (!cleanData.userId) return;
+
             const filePath = path.join(RESULTS_DIR, `${cleanData.userId}.json`);
-            fs.writeFileSync(filePath, JSON.stringify(cleanData, null, 2));
+            let shouldWrite = false;
+
+            if (!fs.existsSync(filePath)) {
+                shouldWrite = true; // File doesn't exist locally yet
+            } else if (cleanData.updatedAt) {
+                try {
+                    const localData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+                    if (!localData.updatedAt || cleanData.updatedAt > localData.updatedAt) {
+                        shouldWrite = true; // Cloud version is newer than local version
+                    }
+                } catch (e) {
+                    shouldWrite = true; // Local file was corrupted, restore from cloud
+                }
+            }
+
+            if (shouldWrite) {
+                fs.writeFileSync(filePath, JSON.stringify(cleanData, null, 2));
+                newOrUpdatedCount++;
+            }
         });
-        console.log(`Synced ${allDocs.length} participant logs from MongoDB to local disk.`);
+
+        console.log(`Synced ${newOrUpdatedCount} new/updated participant logs from MongoDB (Total in DB: ${allDocs.length}).`);
     } catch (err) {
         console.error("MongoDB connection error:", err.message);
     }
@@ -41,6 +64,8 @@ initDatabase();
 
 // Helper function to save to both local disk AND MongoDB Atlas
 async function saveParticipantData(userId, userData) {
+    userData.updatedAt = Date.now(); // Stamp exact time of latest change
+
     const filePath = path.join(RESULTS_DIR, `${userId}.json`);
     fs.writeFileSync(filePath, JSON.stringify(userData, null, 2));
 
