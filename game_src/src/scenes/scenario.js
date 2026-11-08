@@ -437,7 +437,7 @@ export default function scenario() {
         hiddenInput.style.borderRadius = isVisible ? "10px" : "0";
         hiddenInput.style.background = isVisible ? "rgba(20,20,40,0.92)" : "transparent";
         hiddenInput.style.color = isVisible ? "#fff" : "transparent";
-        hiddenInput.style.font = isVisible ? "18px Verdana, sans-serif" : "1px monospace";
+        hiddenInput.style.font = isVisible ? "24px Verdana, sans-serif" : "1px monospace";
         hiddenInput.style.lineHeight = isVisible ? "1.25" : "1";
         hiddenInput.style.resize = "none";
         hiddenInput.style.outline = "none";
@@ -565,8 +565,8 @@ export default function scenario() {
     const chatText = textWindow.add([
         k.text("", {
             font: "Verdana",
-            size: 38,
-            lineSpacing: 12,
+            size: 46,
+            lineSpacing: 14,
             width: CHAT_W - 100,
             align: "left",
             styles: {
@@ -655,8 +655,8 @@ export default function scenario() {
         k.anchor("botleft"),
     ]);
 
-    const inputFontSize = 36;
-    const inputLineHeight = 48;
+    const inputFontSize = 44;
+    const inputLineHeight = 56;
 
     const inputText = k.add([
         // Lines are wrapped by getWrappedInputLines so cursor positioning and rendering
@@ -1247,7 +1247,7 @@ export default function scenario() {
     }
 
     // --- Fetch + parse AI response, then apply win/continue logic ---
-    async function fetchAIResponse() {
+    async function fetchAIResponse(userMsg = "", isHint = false, redeemedHintCost = 0) {
         try {
             const lastMessage = chatHistory[chatHistory.length - 1].content;
             const isHintRequest = lastMessage.includes("[PAID_HINT_REDEEMED]");
