@@ -386,3 +386,60 @@ button:active {
         font-size: 20px;
     }
 }
+
+/* =========================================
+   SIMPLE COLLAPSIBLE DROPDOWN UI (NON-SCENARIOS ONLY)
+   ========================================= */
+.form-group.dropdown-group {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    padding-right: 60px; /* Space on the right for the larger arrow */
+}
+
+.form-group.dropdown-group > label {
+    cursor: pointer;
+    margin-bottom: 0;
+}
+
+/* Larger arrow pinned to the top-right of the question block */
+.form-group.dropdown-group::after {
+    content: "▼";
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    font-size: 22px;
+    line-height: 1;
+    color: #aaaaaa;
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.form-group.dropdown-group.dropdown-open::after {
+    transform: rotate(180deg);
+    color: #ffffff;
+}
+
+.form-group.dropdown-group .radio-group {
+    margin-top: 15px;
+    margin-bottom: 0;
+}
+
+/* Hide unselected options ONLY inside dropdown-group when closed */
+.form-group.dropdown-group:not(.dropdown-open) .radio-group label {
+    display: none;
+    margin: 0;
+}
+
+/* Keep ONLY the selected answer visible under the question when closed */
+.form-group.dropdown-group:not(.dropdown-open) .radio-group label:has(input[type="radio"]:checked),
+.form-group.dropdown-group:not(.dropdown-open) .radio-group label.selected-option {
+    display: block;
+    margin-top: 15px;
+}
+
+.form-group.dropdown-group:not(.dropdown-open) .radio-group label.selected-option .radio-label {
+    margin-bottom: 0;
+    transform: none;
+    box-shadow: none;
+}

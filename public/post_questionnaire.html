@@ -187,8 +187,51 @@
             document.getElementById('help-modal').classList.remove('active');
         }
 
+        function setupDropdownQuestions() {
+            document.querySelectorAll('.form-group').forEach(group => {
+                const radioGroup = group.querySelector('.radio-group');
+                const isScenario = group.querySelector(':scope > p'); // Scenarios have a <p> tag
+
+                // Skip consent box (no radioGroup) and skip all Scenario blocks!
+                if (!radioGroup || isScenario) return;
+
+                if (group.classList.contains('dropdown-group')) return;
+                group.classList.add('dropdown-group');
+
+                // Clicking anywhere on the question block (outside an open option) toggles the dropdown
+                group.addEventListener('click', (e) => {
+                    const clickedOption = e.target.closest('.radio-group label');
+                    if (clickedOption && group.classList.contains('dropdown-open')) {
+                        // Let the radio button change event handle selecting and closing
+                        return;
+                    }
+                    if (clickedOption && !group.classList.contains('dropdown-open')) {
+                        // Clicking the already-selected answer when closed re-opens the dropdown
+                        e.preventDefault();
+                    }
+                    playClick();
+                    group.classList.toggle('dropdown-open');
+                });
+
+                // Selecting an answer highlights it under the question and closes the list
+                radioGroup.querySelectorAll('label').forEach(optLabel => {
+                    const radio = optLabel.querySelector('input[type="radio"]');
+                    if (!radio) return;
+
+                    radio.addEventListener('change', () => {
+                        radioGroup.querySelectorAll('label').forEach(l => l.classList.remove('selected-option'));
+                        if (radio.checked) {
+                            optLabel.classList.add('selected-option');
+                            group.classList.remove('dropdown-open');
+                        }
+                    });
+                });
+            });
+        }
+
         window.onload = function() {
             document.querySelector('form').reset();
+            setupDropdownQuestions();
 
             document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
                 input.addEventListener('change', playClick);
