@@ -187,6 +187,64 @@
             document.getElementById('help-modal').classList.remove('active');
         }
 
+        const CUQ_QUESTIONS = [
+            "1. The Ethical Guide's personality was realistic and engaging.",
+            "2. The Ethical Guide seemed too robotic.",
+            "3. The Ethical Guide was welcoming during initial setup.",
+            "4. The Ethical Guide seemed very unfriendly.",
+            "5. The Ethical Guide explained its scope and purpose well.",
+            "6. The Ethical Guide gave no indication as to its purpose.",
+            "7. The Ethical Guide was easy to navigate.",
+            "8. It would be easy to get confused when using The Ethical Guide.",
+            "9. The Ethical Guide understood me well.",
+            "10. The Ethical Guide failed to recognize a lot of my inputs.",
+            "11. The Ethical Guide's responses were useful, appropriate and informative.",
+            "12. The Ethical Guide's responses were irrelevant.",
+            "13. The Ethical Guide coped well with any errors or mistakes.",
+            "14. The Ethical Guide seemed unable to handle any errors.",
+            "15. The Ethical Guide was very easy to use.",
+            "16. The Ethical Guide was very complex."
+        ];
+
+        function renderCUQQuestions() {
+            const container = document.getElementById('cuq-container');
+            if (!container) return;
+            const scaleOptions = [
+                { val: 1, label: "1 - Strongly Disagree" },
+                { val: 2, label: "2 - Disagree" },
+                { val: 3, label: "3 - Neutral" },
+                { val: 4, label: "4 - Agree" },
+                { val: 5, label: "5 - Strongly Agree" }
+            ];
+
+            container.innerHTML = CUQ_QUESTIONS.map((qText, idx) => {
+                const qNum = idx + 1;
+                return `
+                    <div class="form-group">
+                        <label>${qText}</label>
+                        <div class="radio-group">
+                            ${scaleOptions.map((opt, oIdx) => `
+                                <label>
+                                    <input type="radio" name="cuq_${qNum}" value="${opt.val}" ${oIdx === 0 ? 'required' : ''}>
+                                    <span class="radio-label">${opt.label}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateSamSlider(slider, badgeId) {
+            slider.dataset.touched = "true";
+            slider.classList.add('slider-touched');
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                badge.innerText = `${slider.value} / 9`;
+                badge.classList.add('active');
+            }
+        }
+
         function setupDropdownQuestions() {
             document.querySelectorAll('.form-group').forEach(group => {
                 const radioGroup = group.querySelector('.radio-group');
@@ -231,6 +289,7 @@
 
         window.onload = function() {
             document.querySelector('form').reset();
+            renderCUQQuestions();
             setupDropdownQuestions();
 
             document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
@@ -272,6 +331,12 @@
             radioNames.forEach(name => {
                 if (!currentDiv.querySelector(`input[name="${name}"]:checked`)) allValid = false;
             });
+
+            const sliders = currentDiv.querySelectorAll('input[type="range"][required]');
+            sliders.forEach(slider => {
+                if (slider.dataset.touched !== "true") allValid = false;
+            });
+
             return allValid;
         }
 
@@ -360,7 +425,8 @@
         <input type="hidden" name="time_post_scenario_2" id="time_stage_2">
         <input type="hidden" name="time_post_scenario_3" id="time_stage_3">
         <input type="hidden" name="time_post_scenario_4" id="time_stage_4">
-        <input type="hidden" name="time_feedback" id="time_stage_5">
+        <input type="hidden" name="time_sam_feedback" id="time_stage_5">
+        <input type="hidden" name="time_cuq_feedback" id="time_stage_6">
         
         <!-- STAGE 1: Post Scenario 1 -->
         <div id="stage-1" class="stage active">
@@ -417,39 +483,90 @@
             </div>
         </div>
 
-        <!-- STAGE 5: Final Overall Feedback -->
+        <!-- STAGE 5: SAM Affective Sliders (Valence & Arousal) -->
         <div id="stage-5" class="stage">
             <div class="stage-header">FINAL EVALUATION : SYSTEM FEEDBACK</div>
-            <div class="form-group">
-                <label>HOW ENJOYABLE WAS THE EXPERIENCE OF USING THE GAME?</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="gameEnjoyment" value="1" required><span class="radio-label">1 - Not enjoyable at all</span></label>
-                    <label><input type="radio" name="gameEnjoyment" value="2"><span class="radio-label">2 - Slightly enjoyable</span></label>
-                    <label><input type="radio" name="gameEnjoyment" value="3"><span class="radio-label">3 - Moderately enjoyable</span></label>
-                    <label><input type="radio" name="gameEnjoyment" value="4"><span class="radio-label">4 - Highly enjoyable</span></label>
-                    <label><input type="radio" name="gameEnjoyment" value="5"><span class="radio-label">5 - Extremely enjoyable</span></label>
+
+            <!-- VALENCE SLIDER (SAD - HAPPY) -->
+            <div class="form-group sam-card">
+                <div class="sam-header-row">
+                    <label style="margin-bottom: 0;">HOW WOULD YOU RATE THE GAME EXPERIENCE IN TERMS OF VALENCE (SAD - HAPPY)?</label>
+                    <span id="valence-badge" class="sam-value-badge">MOVE SLIDER</span>
+                </div>
+
+                <!-- 5 Retro Pixel-Art SAM Valence Manikins (Sad -> Happy) -->
+                <div class="sam-manikin-row">
+                    <!-- 1: Very Sad -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><path d="M5 9 H11 M4 10 H5 M11 10 H12" stroke="currentColor" stroke-width="1.5"/><path d="M5 11 V15 H11 V11 M3 13 H5 M11 13 H13" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <!-- 3: Slightly Sad -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><path d="M5 8.5 H11 M4 9.5 H5 M11 9.5 H12" stroke="currentColor" stroke-width="1.2"/><path d="M5 11 V15 H11 V11 M3 12.5 H5 M11 12.5 H13" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <!-- 5: Neutral -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><path d="M5 8.5 H11" stroke="currentColor" stroke-width="1.5"/><path d="M5 11 V15 H11 V11 M2 12 H5 M11 12 H14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <!-- 7: Happy -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><path d="M4 7.5 H5 M5 8.5 H11 M11 7.5 H12" stroke="currentColor" stroke-width="1.2"/><path d="M5 11 V15 H11 V11 M2 11.5 H5 M11 11.5 H14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                    <!-- 9: Very Happy -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><path d="M4 7 H5 M5 8.5 H11 M11 7 H12" stroke="currentColor" stroke-width="1.5"/><path d="M5 11 V15 H11 V11 M2 10.5 H5 M11 10.5 H14" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </div>
+
+                <div class="sam-slider-wrap">
+                    <input type="range" name="samValence" id="samValence" class="sam-slider" min="1" max="9" step="1" value="5" required
+                           oninput="updateSamSlider(this, 'valence-badge')" onchange="playClick()">
+                    <div class="sam-ticks">
+                        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+                    </div>
+                    <div class="sam-poles">
+                        <span>SAD (UNPLEASANT)</span>
+                        <span>NEUTRAL</span>
+                        <span>HAPPY (PLEASANT)</span>
+                    </div>
                 </div>
             </div>
-            <div class="form-group">
-                <label>HOW EFFECTIVE WERE THE DIALOGUES WITH THE MORAL GUIDE IN TEACHING THE MORAL FRAMEWORK?</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="teachingEffectiveness" value="1" required><span class="radio-label">1 - Not effective at all</span></label>
-                    <label><input type="radio" name="teachingEffectiveness" value="2"><span class="radio-label">2 - Slightly effective</span></label>
-                    <label><input type="radio" name="teachingEffectiveness" value="3"><span class="radio-label">3 - Moderately effective</span></label>
-                    <label><input type="radio" name="teachingEffectiveness" value="4"><span class="radio-label">4 - Highly effective</span></label>
-                    <label><input type="radio" name="teachingEffectiveness" value="5"><span class="radio-label">5 - Extremely effective</span></label>
+
+            <!-- AROUSAL SLIDER (BORED - EXCITED) -->
+            <div class="form-group sam-card">
+                <div class="sam-header-row">
+                    <label style="margin-bottom: 0;">HOW WOULD YOU RATE THE GAME EXPERIENCE IN TERMS OF AROUSAL (BORED - EXCITED)?</label>
+                    <span id="arousal-badge" class="sam-value-badge">MOVE SLIDER</span>
+                </div>
+
+                <!-- 5 Retro Pixel-Art SAM Arousal Manikins (Bored/Calm -> Excited/Energized) -->
+                <div class="sam-manikin-row">
+                    <!-- 1: Bored / Calm (Closed eyes, tiny pulse) -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 5 H7 M9 5 H11 M6 8 H10" stroke="currentColor" stroke-width="1.2"/><path d="M4 10 V15 H12 V10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="7.5" y="12" width="1" height="1" fill="currentColor"/></svg>
+                    <!-- 3: Low Arousal -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="1.5" fill="currentColor"/><rect x="9" y="4" width="2" height="1.5" fill="currentColor"/><path d="M6 8 H10" stroke="currentColor" stroke-width="1.2"/><path d="M4 10 V15 H12 V10" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="7" y="11.5" width="2" height="2" fill="currentColor"/></svg>
+                    <!-- 5: Moderate Arousal -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="4" width="2" height="2" fill="currentColor"/><rect x="9" y="4" width="2" height="2" fill="currentColor"/><path d="M6 8 H10" stroke="currentColor" stroke-width="1.2"/><path d="M4 10 V15 H12 V10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 10.5 L9.5 12.5 L8 14.5 L6.5 12.5 Z" fill="currentColor"/></svg>
+                    <!-- 7: High Arousal -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="5" y="3.5" width="2" height="2.5" fill="currentColor"/><rect x="9" y="3.5" width="2" height="2.5" fill="currentColor"/><rect x="7" y="7" width="2" height="2" fill="currentColor"/><path d="M4 10 V15 H12 V10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 10.5 L11 14.5 M11 10.5 L5 14.5 M8 10 V15" stroke="#ffd700" stroke-width="1.4"/></svg>
+                    <!-- 9: Very Excited / Energized (Wide eyes, bursting energy star) -->
+                    <svg class="sam-svg" viewBox="0 0 16 16"><rect x="3" y="1" width="10" height="9" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4.5" y="3" width="2.5" height="2.5" fill="currentColor"/><rect x="9" y="3" width="2.5" height="2.5" fill="currentColor"/><rect x="6.5" y="6.5" width="3" height="2.5" fill="currentColor"/><path d="M4 10 V15 H12 V10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 9.5 L14 15.5 M14 9.5 L2 15.5 M8 9 V16 M2 12.5 H14" stroke="#ffd700" stroke-width="1.6"/></svg>
+                </div>
+
+                <div class="sam-slider-wrap">
+                    <input type="range" name="samArousal" id="samArousal" class="sam-slider" min="1" max="9" step="1" value="5" required
+                           oninput="updateSamSlider(this, 'arousal-badge')" onchange="playClick()">
+                    <div class="sam-ticks">
+                        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+                    </div>
+                    <div class="sam-poles">
+                        <span>BORED (CALM)</span>
+                        <span>NEUTRAL</span>
+                        <span>EXCITED (ENERGIZED)</span>
+                    </div>
                 </div>
             </div>
-            <div class="form-group">
-                <label>DID THE MORAL GUIDE RESPOND NATURALLY TO YOUR IN-GAME CHOICES?</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="aiNaturalness" value="1" required><span class="radio-label">1 - Very robotic and disconnected</span></label>
-                    <label><input type="radio" name="aiNaturalness" value="2"><span class="radio-label">2 - Somewhat rigid</span></label>
-                    <label><input type="radio" name="aiNaturalness" value="3"><span class="radio-label">3 - Acceptable, but obviously an AI</span></label>
-                    <label><input type="radio" name="aiNaturalness" value="4"><span class="radio-label">4 - Natural and responsive to my choices</span></label>
-                    <label><input type="radio" name="aiNaturalness" value="5"><span class="radio-label">5 - Highly immersive</span></label>
-                </div>
+
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>
             </div>
+        </div>
+
+        <!-- STAGE 6: Chatbot Usability Questionnaire (16 Items) -->
+        <div id="stage-6" class="stage">
+            <div class="stage-header">FINAL EVALUATION : SYSTEM FEEDBACK</div>
+            <div id="cuq-container"></div>
             <div class="btn-nav-container">
                 <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
                 <button type="button" class="btn-finish" style="flex: 1; margin: 0;" onclick="submitForm()">FINISH EXPERIMENT</button>

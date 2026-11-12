@@ -82,6 +82,21 @@ async function saveParticipantData(userId, userData) {
     }
 }
 
+// Helper function to calculate official CUQ Score (0-100 scale)
+function calculateCUQScore(cuqAnswers) {
+    let rawSum = 0;
+    for (let i = 1; i <= 16; i++) {
+        const val = parseInt(cuqAnswers[`cuq_${i}`], 10);
+        if (isNaN(val)) return "";
+        if (i % 2 === 1) {
+            rawSum += (val - 1); // Odd items: positive
+        } else {
+            rawSum += (5 - val); // Even items: negative (reverse-scored)
+        }
+    }
+    return ((rawSum / 64) * 100).toFixed(2);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -128,6 +143,7 @@ app.post('/api/pre_submit', async (req, res) => {
         philosophyKnowledge, 
         aiFrequency, 
         time_consent, 
+        time_framework_select,
         time_demographics, 
         ...scenarios 
     } = req.body;
@@ -164,6 +180,7 @@ app.post('/api/pre_submit', async (req, res) => {
     // Record the exact timestamp, framework-specific experience, and pre-scenarios
     userData.runs[framework].gameStartTimestamp = Date.now();
     userData.runs[framework].philosophyKnowledge = philosophyKnowledge;
+    userData.runs[framework].time_framework_select = time_framework_select;
     userData.runs[framework].pre = scenarios;
 
     await saveParticipantData(userId, userData);
@@ -196,17 +213,29 @@ app.post('/api/post_submit', async (req, res) => {
     const {
         userId,
         framework: bodyFw,
-        teachingEffectiveness,
-        aiNaturalness,
-        gameEnjoyment,
-        time_feedback,
-        ...scenarioAnswers
+        samValence,
+        samArousal,
+        time_sam_feedback,
+        time_cuq_feedback,
+        ...restBody
     } = req.body;
 
-    // Safety guard: never write to undefined.json
     if (!userId || userId === 'undefined') {
         return res.redirect('/');
     }
+
+    // Separate post_scenario_* answers from cuq_* answers
+    const scenarioAnswers = {};
+    const cuqAnswers = {};
+    Object.keys(restBody).forEach(key => {
+        if (key.startsWith('cuq_')) {
+            cuqAnswers[key] = restBody[key];
+        } else {
+            scenarioAnswers[key] = restBody[key];
+        }
+    });
+
+    const cuqScore = calculateCUQScore(cuqAnswers);
 
     const userFile = path.join(RESULTS_DIR, `${userId}.json`);
     let userData = { runs: {} };
@@ -220,18 +249,18 @@ app.post('/api/post_submit', async (req, res) => {
         userData.runs[framework].post = scenarioAnswers;
     }
 
-    // Save feedback both inside the specific framework run AND at root level
-    if (teachingEffectiveness || aiNaturalness || gameEnjoyment) {
-        const feedbackData = {
-            teachingEffectiveness,
-            aiNaturalness,
-            gameEnjoyment,
-            time_feedback
-        };
-        userData.finalFeedback = feedbackData;
-        if (framework && userData.runs[framework]) {
-            userData.runs[framework].feedback = feedbackData;
-        }
+    const feedbackData = {
+        samValence: samValence ? Number(samValence) : null,
+        samArousal: samArousal ? Number(samArousal) : null,
+        cuqScore: cuqScore !== "" ? Number(cuqScore) : null,
+        cuqResponses: cuqAnswers,
+        time_sam_feedback,
+        time_cuq_feedback
+    };
+
+    userData.finalFeedback = feedbackData;
+    if (framework && userData.runs[framework]) {
+        userData.runs[framework].feedback = feedbackData;
     }
 
     await saveParticipantData(userId, userData);
@@ -355,8 +384,13 @@ app.get('/api/admin/export-csv', (req, res) => {
         "post_s1", "post_s2", "post_s3", "post_s4", "post_score_total",
         "learning_gain",
         "game_completed", "game_duration_sec", "batteries_collected", "answer_score", "hints_used", "chat_turns",
-        "gameEnjoyment", "teachingEffectiveness", "aiNaturalness",
-        "time_demographics", "time_pre_total", "time_post_total", "time_feedback"
+        "samValence", "samArousal", "cuqScore",
+        "cuq_1", "cuq_2", "cuq_3", "cuq_4", "cuq_5", "cuq_6", "cuq_7", "cuq_8",
+        "cuq_9", "cuq_10", "cuq_11", "cuq_12", "cuq_13", "cuq_14", "cuq_15", "cuq_16",
+        "time_consent", "time_framework_select", "time_demographics",
+        "time_pre_s1", "time_pre_s2", "time_pre_s3", "time_pre_s4", "time_pre_total",
+        "time_post_s1", "time_post_s2", "time_post_s3", "time_post_s4", "time_post_total",
+        "time_sam_feedback", "time_cuq_feedback"
     ];
 
     const rows = [headers.join(",")];
@@ -377,8 +411,19 @@ app.get('/api/admin/export-csv', (req, res) => {
                 const expected = targetValue[fw];
 
                 // Calculate Pre & Post accuracy scores (out of 4)
-                const preAns = [pre.scenario_1, pre.scenario_2, pre.scenario_3, pre.scenario_4];
-                const postAns = [post.scenario_1, post.scenario_2, post.scenario_3, post.scenario_4];
+                const preAns = [
+                    pre.pre_scenario_1 || pre.scenario_1,
+                    pre.pre_scenario_2 || pre.scenario_2,
+                    pre.pre_scenario_3 || pre.scenario_3,
+                    pre.pre_scenario_4 || pre.scenario_4
+                ];
+                const postAns = [
+                    post.post_scenario_1 || post.scenario_1,
+                    post.post_scenario_2 || post.scenario_2,
+                    post.post_scenario_3 || post.scenario_3,
+                    post.post_scenario_4 || post.scenario_4
+                ];
+
                 const preScore = preAns.filter(a => a === expected).length;
                 const postScore = postAns.filter(a => a === expected).length;
                 const learningGain = (r.pre && r.post) ? (postScore - preScore) : "";
@@ -401,9 +446,15 @@ app.get('/api/admin/export-csv', (req, res) => {
                     demo.major || "",
                     demo.aiFrequency || "",
                     r.philosophyKnowledge || demo.philosophyKnowledge || "",
-                    pre.scenario_1 || "", pre.scenario_2 || "", pre.scenario_3 || "", pre.scenario_4 || "",
+                    pre.pre_scenario_1 || pre.scenario_1 || "",
+                    pre.pre_scenario_2 || pre.scenario_2 || "",
+                    pre.pre_scenario_3 || pre.scenario_3 || "",
+                    pre.pre_scenario_4 || pre.scenario_4 || "",
                     r.pre ? preScore : "",
-                    post.scenario_1 || "", post.scenario_2 || "", post.scenario_3 || "", post.scenario_4 || "",
+                    post.post_scenario_1 || post.scenario_1 || "",
+                    post.post_scenario_2 || post.scenario_2 || "",
+                    post.post_scenario_3 || post.scenario_3 || "",
+                    post.post_scenario_4 || post.scenario_4 || "",
                     r.post ? postScore : "",
                     learningGain,
                     r.gameLogs ? "true" : "false",
@@ -412,13 +463,25 @@ app.get('/api/admin/export-csv', (req, res) => {
                     game.successfulAnswerScoreTotal ?? "",
                     game.hintsUsed ?? "",
                     Array.isArray(game.chatLog) ? game.chatLog.length : "",
-                    fb.gameEnjoyment || "",
-                    fb.teachingEffectiveness || "",
-                    fb.aiNaturalness || "",
+                    fb.samValence ?? "",
+                    fb.samArousal ?? "",
+                    fb.cuqScore ?? "",
+                    ...(Array.from({ length: 16 }, (_, i) => (fb.cuqResponses && fb.cuqResponses[`cuq_${i + 1}`]) || "")),
+                    demo.time_consent || "",
+                    r.time_framework_select || pre.time_framework_select || "",
                     demo.time_demographics || "",
+                    pre.time_pre_scenario_1 || "",
+                    pre.time_pre_scenario_2 || "",
+                    pre.time_pre_scenario_3 || "",
+                    pre.time_pre_scenario_4 || "",
                     preTimeTotal,
+                    post.time_post_scenario_1 || "",
+                    post.time_post_scenario_2 || "",
+                    post.time_post_scenario_3 || "",
+                    post.time_post_scenario_4 || "",
                     postTimeTotal,
-                    fb.time_feedback || ""
+                    fb.time_sam_feedback || "",
+                    fb.time_cuq_feedback || ""
                 ].map(val => `"${String(val).replace(/"/g, '""')}"`);
 
                 rows.push(row.join(","));
