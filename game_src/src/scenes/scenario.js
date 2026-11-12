@@ -13,7 +13,7 @@ import {
 import { ensureBackTrap } from "../utils/history.js";
 
 // --- CHAT UI TOKENS ---
-const BOT_PREFIX = "[bot]The Moral Guardian:[/bot]";
+const BOT_PREFIX = "[bot]The Moral Guide:[/bot]";
 const META_GUARD_MESSAGE =
     "I can only evaluate ethical arguments for this scenario. Please answer the dilemma directly.";
 const HINT_COSTS = [100, 200, 300, 500];
