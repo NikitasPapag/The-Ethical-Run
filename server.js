@@ -322,6 +322,7 @@ app.post('/api/chat', async (req, res) => {
             headers: {
                 "Authorization": `Bearer ${apiKey.trim()}`,
                 "Content-Type": "application/json",
+                "User-Agent": "TheEthicalRun-ThesisServer/1.0"
             },
             body: JSON.stringify(req.body),
         });
