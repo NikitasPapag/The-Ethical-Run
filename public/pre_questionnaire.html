@@ -309,7 +309,13 @@
                 const timeInput = document.getElementById('time_stage_' + currentStage);
                 if (timeInput) timeInput.value = ((Date.now() - stageStartTime) / 1000).toFixed(2); 
 
-                currentStage++;
+                if (currentStage === 2) {
+                    currentStage = 2.5;
+                } else if (currentStage === 2.5) {
+                    currentStage = 3;
+                } else {
+                    currentStage++;
+                }
                 showStage(currentStage);
             } else {
                 showError("Please complete all fields before advancing.");
@@ -318,7 +324,13 @@
 
         function prevStage() {
             playClick();
-            currentStage--;
+            if (currentStage === 3) {
+                currentStage = 2.5;
+            } else if (currentStage === 2.5) {
+                currentStage = 2;
+            } else {
+                currentStage--;
+            }
             showStage(currentStage);
         }
 
@@ -328,11 +340,20 @@
             document.getElementById('selected-framework').value = fwId;
             
             const fwNames = {
-                utilitarianism: "UTILITARIANISM",
-                deontological: "DEONTOLOGY",
+                utilitarianism: "UTILITARIAN ETHICS",
+                deontological: "DEONTOLOGICAL ETHICS",
                 virtue: "VIRTUE ETHICS"
             };
-            document.getElementById('fw-experience-label').innerText = `EXPERIENCE WITH ${fwNames[fwId] || 'MORAL PHILOSOPHY'}:`;
+            const fwTitle = fwNames[fwId] || "MORAL PHILOSOPHY";
+            document.getElementById('fw-experience-label').innerText = `EXPERIENCE WITH ${fwTitle}:`;
+
+            // Update the Stage 2.5 Briefing Card text and color theme
+            const card = document.getElementById('pre-briefing-card');
+            if (card) {
+                card.className = `form-group briefing-card theme-${fwId}`;
+                document.getElementById('pre-briefing-text').innerHTML = 
+                    `Before we begin the game, let’s see what you think about the following scenarios, under the <span class="briefing-fw-highlight">${fwTitle}</span> framework.<br><br>To read more about this framework, press the <strong>?</strong> Button.`;
+            }
 
             renderPreScenarios(fwId);
 
@@ -536,6 +557,18 @@
                 </div>
             </div>
             
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>
+            </div>
+        </div>
+
+        <!-- STAGE 2.5: Pre-Scenario Framework Briefing Card -->
+        <div id="stage-2.5" class="stage">
+            <div class="stage-header">PROTOCOL BRIEFING</div>
+            <div id="pre-briefing-card" class="form-group briefing-card theme-utilitarianism">
+                <p id="pre-briefing-text"></p>
+            </div>
             <div class="btn-nav-container">
                 <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
                 <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>

@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <script>
-        let currentStage = 1;
+        let currentStage = 0.5;
         let stageStartTime = Date.now();
         let isFinalRun = false;
 
@@ -297,13 +297,25 @@
             
             if (userId) document.getElementById('userId').value = userId;
 
-           fetch(`/api/status/${userId}`)
+            fetch(`/api/status/${userId}`)
                 .then(r => r.json())
                 .then(status => {
                     const framework = urlFramework || status.currentFramework || 'utilitarianism';
                     document.getElementById('framework').value = framework;
                     renderPostScenarios(framework);
-                    document.getElementById('help-btn').classList.add('visible');
+
+                    const fwNames = {
+                        utilitarianism: "UTILITARIAN ETHICS",
+                        deontological: "DEONTOLOGICAL ETHICS",
+                        virtue: "VIRTUE ETHICS"
+                    };
+                    const fwTitle = fwNames[framework] || "UTILITARIAN ETHICS";
+                    const card = document.getElementById('post-briefing-card');
+                    if (card) {
+                        card.className = `form-group briefing-card theme-${framework}`;
+                        document.getElementById('post-briefing-text').innerHTML = 
+                            `Let’s see what you think about the following scenarios, to check your understanding of the <span class="briefing-fw-highlight">${fwTitle}</span> framework.`;
+                    }
                 });
         };
 
@@ -346,7 +358,7 @@
             playClick();
             if (validateCurrentStage()) {
                 recordCurrentStageTime();
-                currentStage++;
+                currentStage = (currentStage === 0.5) ? 1 : currentStage + 1;
                 showStage(currentStage);
             } else {
                 showError("Please select an option for all fields before advancing.");
@@ -355,7 +367,7 @@
 
         function prevStage() {
             playClick();
-            currentStage--;
+            currentStage = (currentStage === 1) ? 0.5 : currentStage - 1;
             showStage(currentStage);
         }
 
@@ -395,18 +407,6 @@
         </div>
     </div>
 
-    <!-- FLOATING ? HELP BUTTON -->
-    <button type="button" id="help-btn" class="help-fab" onclick="openHelpModal()">?</button>
-
-    <!-- FRAMEWORK SUMMARY MODAL -->
-    <div id="help-modal" class="modal-overlay">
-        <div class="modal-box info-box">
-            <div id="help-modal-title" class="modal-title info-title"></div>
-            <p id="help-modal-text" class="modal-message" style="text-align: justify;"></p>
-            <button type="button" class="btn-info-modal" onclick="closeHelpModal()">RESUME</button>
-        </div>
-    </div>
-
     <h1 class="title-finish">SIMULATION COMPLETE</h1>
     
     <form action="/api/post_submit" method="POST" id="post-form" novalidate>
@@ -423,8 +423,19 @@
         <input type="hidden" name="time_sam_feedback" id="time_stage_5">
         <input type="hidden" name="time_cuq_feedback" id="time_stage_6">
         
+        <!-- STAGE 0.5: Post-Game Evaluation Briefing Card -->
+        <div id="stage-0.5" class="stage active">
+            <div class="stage-header">POST-SIMULATION EVALUATION</div>
+            <div id="post-briefing-card" class="form-group briefing-card theme-utilitarianism">
+                <p id="post-briefing-text"></p>
+            </div>
+            <div class="btn-nav-container">
+                <button type="button" class="btn-nav" style="flex: 1;" onclick="nextStage()">NEXT -></button>
+            </div>
+        </div>
+
         <!-- STAGE 1: Post Scenario 1 -->
-        <div id="stage-1" class="stage active">
+        <div id="stage-1" class="stage">
             <div class="stage-header" id="post_header_1">EVALUATION 1 / 4 : ALPHA</div>
             <div class="form-group">
                 <label>SCENARIO 05:</label>
@@ -432,7 +443,8 @@
                 <div class="radio-group" id="post_options_1"></div>
             </div>
             <div class="btn-nav-container">
-                <button type="button" class="btn-nav" style="flex: 1;" onclick="nextStage()">NEXT -></button>
+                <button type="button" class="btn-nav" onclick="prevStage()"><- BACK</button>
+                <button type="button" class="btn-nav" onclick="nextStage()">NEXT -></button>
             </div>
         </div>
 

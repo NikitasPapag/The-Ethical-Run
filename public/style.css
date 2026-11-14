@@ -689,3 +689,16 @@ button,
     word-spacing: normal !important;
     transform: none !important;
 }
+
+/* =========================================
+   FRAMEWORK BRIEFING / TRANSITION CARDS
+   ========================================= */
+.briefing-card {
+    text-align: center;
+    padding: 40px 30px;
+}
+
+.briefing-fw-highlight {
+    font-weight: bold;
+    color: #ffd700;
+}
