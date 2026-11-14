@@ -506,10 +506,10 @@ function showAnswerScoreUI(scoreGainPercent) {
         if (k.get("portal").length < MAX_PORTALS) {
             makePortal(k.vec2(3200, 1300));
         }
-        scheduleSpawn(k.rand(20, 25), spawnPortal);
+        scheduleSpawn(k.rand(18, 22), spawnPortal);
     };
 
-    const initialPortalWaitTime = k.rand(18, 22);
+    const initialPortalWaitTime = k.rand(15, 20);
     scheduleSpawn(initialPortalWaitTime, spawnPortal);
 
     k.add([
