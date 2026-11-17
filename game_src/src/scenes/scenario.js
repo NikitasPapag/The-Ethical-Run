@@ -348,6 +348,8 @@ export default function scenario() {
     let canExit = false;
     let isFetching = false;
     let isSceneActive = true;
+    let hintUsedInThisScenario = false;
+    let isHintModalOpen = false;
     const aiAbortController = new AbortController();
 
     // --- 1. SCENARIO SELECTION ---
@@ -1162,9 +1164,9 @@ export default function scenario() {
         }
     });
 
-    // --- Hint purchase flow ---
+    // --- Hint purchase flow with Revive-style Warning Modal ---
     hintBtn.onClick(() => {
-        if (!isChatActive || isFetching) return;
+        if (!isChatActive || isFetching || isHintModalOpen || canExit) return;
         const hintCost = getHintCost();
         if (currentScore < hintCost) {
             playHint();
@@ -1177,15 +1179,110 @@ export default function scenario() {
         }
 
         playClick();
-        currentScore -= hintCost;
-        k.setData("saved-score", currentScore);
-        scoreUI.text = `BATTERIES: ${currentScore}`;
+        isHintModalOpen = true;
+        isChatActive = false;
+        hiddenInput.blur();
 
         const currentHints = k.getData("hints-used") || 0;
-        k.setData("hints-used", currentHints + 1);
-        hintCostText.text = `(${getHintCost()} Batteries)`;
+        const nextHintNumber = currentHints + 1;
 
-        handleUserSend(null, true, hintCost);
+        const hintModal = k.add([
+            k.pos(0, 0),
+            k.fixed(),
+            k.z(300),
+        ]);
+
+        hintModal.add([
+            k.rect(1450, 760, { radius: 20 }),
+            k.pos(k.center().x, k.center().y),
+            k.anchor("center"),
+            k.color(20, 20, 40),
+            k.opacity(0.97),
+            k.outline(8, k.WHITE),
+        ]);
+
+        hintModal.add([
+            k.text("HINT WARNING!", { font: "mania", size: 105 }),
+            k.pos(k.center().x, k.center().y - 240),
+            k.anchor("center"),
+            k.color(255, 50, 50),
+        ]);
+
+        const warningText = nextHintNumber >= 3
+            ? `REDEEM HINT FOR ${hintCost} BATTERIES?\n\n• THIS SCENARIO WILL NOT COUNT AS PROGRESS.\n• WARNING (HINT ${nextHintNumber}): AFTER 3 HINTS, YOU CAN NO LONGER EARN BATTERIES IN ANY WAY!`
+            : `REDEEM HINT FOR ${hintCost} BATTERIES?\n\n• THIS SCENARIO WILL NOT COUNT TOWARD PROGRESS.\n• AFTER 3 HINTS USED (${ currentHints }/3 SO FAR), ALL BATTERY EARNINGS ARE PERMANENTLY DISABLED!`;
+
+        hintModal.add([
+            k.text(warningText, {
+                font: "mania",
+                size: 46,
+                align: "center",
+                width: 1320,
+                lineSpacing: 14,
+            }),
+            k.pos(k.center().x, k.center().y - 35),
+            k.anchor("center"),
+            k.color(255, 215, 0),
+        ]);
+
+        const makeModalBtn = (label, xOffset, r, g, b) => {
+            const btn = hintModal.add([
+                k.rect(480, 140, { radius: 10 }),
+                k.pos(k.center().x + xOffset, k.center().y + 220),
+                k.anchor("center"),
+                k.color(r, g, b),
+                k.outline(6, k.WHITE),
+                k.area(),
+            ]);
+            btn.add([
+                k.text(label, { font: "mania", size: 54 }),
+                k.anchor("center"),
+                k.color(255, 255, 255),
+            ]);
+            return btn;
+        };
+
+        const cancelBtn = makeModalBtn("CANCEL", -290, 130, 30, 30);
+        const confirmBtn = makeModalBtn("USE HINT", 290, 20, 120, 50);
+
+        let modalTouchHandle = null;
+
+        const closeHintModal = () => {
+            if (modalTouchHandle) modalTouchHandle.cancel();
+            hintModal.destroy();
+            isHintModalOpen = false;
+            isChatActive = true;
+        };
+
+        const handleCancelHint = () => {
+            if (!isHintModalOpen) return;
+            playClick();
+            closeHintModal();
+        };
+
+        const handleConfirmHint = () => {
+            if (!isHintModalOpen) return;
+            playClick();
+            closeHintModal();
+
+            hintUsedInThisScenario = true;
+            currentScore -= hintCost;
+            k.setData("saved-score", currentScore);
+            scoreUI.text = `BATTERIES: ${currentScore}`;
+
+            k.setData("hints-used", nextHintNumber);
+            hintCostText.text = `(${getHintCost()} Batteries)`;
+
+            handleUserSend(null, true, hintCost);
+        };
+
+        cancelBtn.onClick(handleCancelHint);
+        confirmBtn.onClick(handleConfirmHint);
+
+        modalTouchHandle = k.onTouchStart((pos) => {
+            if (confirmBtn.hasPoint(pos)) handleConfirmHint();
+            else if (cancelBtn.hasPoint(pos)) handleCancelHint();
+        });
     });
 
     // --- Main send pipeline (guardrail + API call + UI updates) ---
@@ -1319,42 +1416,57 @@ export default function scenario() {
             k.wait(0.01, scrollToBottom);
 
             if (botReply.score >= 7) {
-                const successfulScoreTotal = k.getData("successful-answer-score-total", 0) || 0;
-                const updatedSuccessfulScoreTotal = successfulScoreTotal + botReply.score;
-                k.setData("successful-answer-score-total", updatedSuccessfulScoreTotal);
-                k.setData("current-answer-score", Math.min(100, Math.ceil(updatedSuccessfulScoreTotal * 2.5)));
-                k.setData("last-answer-score-gain", Math.ceil(botReply.score * 2.5));
+                const hintsUsedTotal = k.getData("hints-used") || 0;
+                const batteriesLocked = hintsUsedTotal >= 3;
+
+                if (!hintUsedInThisScenario) {
+                    const successfulScoreTotal = k.getData("successful-answer-score-total", 0) || 0;
+                    const updatedSuccessfulScoreTotal = successfulScoreTotal + botReply.score;
+                    k.setData("successful-answer-score-total", updatedSuccessfulScoreTotal);
+                    k.setData("current-answer-score", Math.min(100, Math.ceil(updatedSuccessfulScoreTotal * 2.5)));
+                    k.setData("last-answer-score-gain", Math.ceil(botReply.score * 2.5));
+                    k.setData("scenario-progress", progress + 1);
+                } else {
+                    // Hint was used: scenario does not count toward progress or answer score!
+                    k.setData("last-answer-score-gain", 0);
+                }
 
                 playSatisfied();
                 k.add([
-                    k.rect(2000, 350, { radius: 20 }),
+                    k.rect(2000, 380, { radius: 20 }),
                     k.pos(k.center().x, k.center().y - 100),
                     k.anchor("center"),
                     k.color(20, 20, 40),
                     k.opacity(0.95),
-                    k.outline(6, k.GREEN),
+                    k.outline(6, hintUsedInThisScenario ? k.rgb(255, 200, 0) : k.GREEN),
                 ]);
+
+                const completionBannerText = hintUsedInThisScenario
+                    ? `SCORE: ${botReply.score}/10 (HINT USED — NO PROGRESS GAINED)\n\nTHE PORTAL OPENED, BUT THIS SCENARIO DID NOT COUNT!\nPRESS SPACE/CLICK/TOUCH TO CONTINUE.`
+                    : `SCORE: ${botReply.score}/10\n\nTHE BOT IS SATISFIED AND THE PORTAL OPENED!\nPRESS SPACE/CLICK/TOUCH TO COLLECT YOUR REWARD AND CONTINUE.`;
 
                 k.add([
                     k.text(
-                        `SCORE: ${botReply.score}/10\n\nTHE BOT IS SATISFIED AND THE PORTAL OPENED!\nPRESS SPACE/CLICK/TOUCH TO COLLECT YOUR REWARD AND CONTINUE.`,
+                        completionBannerText,
                         {
                             font: "mania",
-                            size: 64,
+                            size: 58,
                             align: "center",
                             width: 1900,
                         },
                     ),
                     k.pos(k.center().x, k.center().y - 100),
                     k.anchor("center"),
-                    k.color(0, 255, 0),
+                    hintUsedInThisScenario ? k.color(255, 215, 0) : k.color(0, 255, 0),
                 ]);
 
-                const totalCollected = k.getData("total-collected", 0);
-                k.setData("total-collected", totalCollected + 100);
+                if (!batteriesLocked && !hintUsedInThisScenario) {
+                    const totalCollected = k.getData("total-collected", 0);
+                    k.setData("total-collected", totalCollected + 100);
+                }
 
-                k.setData("scenario-progress", progress + 1);
                 k.setData("return-reward", true);
+                k.setData("hint-used-last-scenario", hintUsedInThisScenario);
                 canExit = true;
                 isChatActive = false;
 
@@ -1412,7 +1524,8 @@ export default function scenario() {
 
         const updatedProgress = k.getData("scenario-progress", 0);
         if (updatedProgress >= 4) {
-            const finalRunScore = k.getData("total-batteries", 0) + 100;
+            const batteriesLocked = (k.getData("hints-used") || 0) >= 3;
+            const finalRunScore = k.getData("total-batteries", 0) + (batteriesLocked ? 0 : 100);
             k.setData("current-score", finalRunScore);
             k.setData("current-answer-score", getAnswerScorePercent());
             k.setData("saved-score", 0);

@@ -210,21 +210,25 @@ function showAnswerScoreUI(scoreGainPercent) {
 
     let gameSpeed = BASE_GAME_SPEED; 
 
+    const batteriesLocked = (k.getData("hints-used", 0) || 0) >= 3;
+    const hintUsedLastScenario = k.getData("hint-used-last-scenario", false);
+
     // --- GAMESPEED & RETURN LOGIC ---
     if (isReturningFromScenario) {
-        score += 100;
-        totalBatteries += 100; 
-        k.setData("total-batteries", totalBatteries); 
-
-        scoreText.text = `BATTERIES: ${score}`;
+        if (!batteriesLocked && !hintUsedLastScenario) {
+            score += 100;
+            totalBatteries += 100; 
+            k.setData("total-batteries", totalBatteries); 
+            scoreText.text = `BATTERIES: ${score}`;
+            showBatteryUI("+100");
+        }
         
-        // Using the new helper function
-        showBatteryUI("+100");
         showAnswerScoreUI(k.getData("last-answer-score-gain", 0) || 0);
 
         k.setData("return-reward", false); 
+        k.setData("hint-used-last-scenario", false);
         k.setData("last-answer-score-gain", 0);
-        k.setData("saved-score", score); 
+        k.setData("saved-score", score);
         
         if (progress >= 4) { 
             isTransitioning = true;
@@ -262,6 +266,11 @@ function showAnswerScoreUI(scoreGainPercent) {
             player.play("jump");
             player.jump();
             
+            if (batteriesLocked) {
+                showBatteryUI("+0");
+                return;
+            }
+
             let pointsEarned;
 
             if (percentProgress >= 75) {
@@ -440,6 +449,7 @@ function showAnswerScoreUI(scoreGainPercent) {
     player.onCollide("battery", (battery) => {
         if (isGameOver || isTransitioning) return;
         k.destroy(battery);
+        if (batteriesLocked) return;
         score++;
         totalBatteries++; 
         k.setData("total-batteries", totalBatteries);
@@ -494,13 +504,16 @@ function showAnswerScoreUI(scoreGainPercent) {
         [2, 4];
 
     const spawnBattery = () => {
+        if (batteriesLocked) return; // Stop spawning batteries completely after 3 hints!
         if (k.get("battery").length < MAX_BATTERIES) {
             makeBattery(k.vec2(3200, 1400));
         }
         scheduleSpawn(k.rand(minBatteryWait, maxBatteryWait), spawnBattery);
     };
 
-    spawnBattery();
+    if (!batteriesLocked) {
+        spawnBattery();
+    }
 
     const spawnPortal = () => {
         if (k.get("portal").length < MAX_PORTALS) {
