@@ -309,29 +309,79 @@ app.post('/api/post_submit', async (req, res) => {
     `);
 });
 
-// 6. Secure AI Proxy Route (Hides GROQ_API_KEY from the browser)
+// 6. Secure AI Proxy Route with Rotating Key Pool & Auto-Failover
+const rawKeys = process.env.GROQ_API_KEYS || process.env.GROQ_API_KEY || "";
+const groqKeyPool = rawKeys.split(",").map(k => k.trim()).filter(Boolean);
+
+// Start at a random key so multiple localhost PCs don't all hammer Key #1 first
+let currentKeyIndex = groqKeyPool.length > 0 ? Math.floor(Math.random() * groqKeyPool.length) : 0;
+const keyCooldowns = new Map(); // Tracks keys that hit 429 rate limits
+
 app.post('/api/chat', async (req, res) => {
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) {
+    if (groqKeyPool.length === 0) {
         return res.status(500).json({ error: { message: "Server missing GROQ_API_KEY environment variable." } });
     }
 
-    try {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey.trim()}`,
-                "Content-Type": "application/json",
-                "User-Agent": "TheEthicalRun-ThesisServer/1.0"
-            },
-            body: JSON.stringify(req.body),
-        });
+    const now = Date.now();
+    let lastErrorData = null;
+    let lastStatus = 500;
 
-        const data = await response.json();
-        res.status(response.status).json(data);
-    } catch (err) {
-        res.status(500).json({ error: { message: err.message || "Failed to contact AI server." } });
+    // Try up to all keys in the pool before giving up
+    for (let attempt = 0; attempt < groqKeyPool.length; attempt++) {
+        const keyIdx = (currentKeyIndex + attempt) % groqKeyPool.length;
+        const apiKey = groqKeyPool[keyIdx];
+
+        // Skip keys currently on cooldown unless all keys are on cooldown
+        const cooldownUntil = keyCooldowns.get(apiKey) || 0;
+        if (cooldownUntil > now && attempt < groqKeyPool.length - 1) {
+            continue;
+        }
+
+        try {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey}`,
+                    "Content-Type": "application/json",
+                    "User-Agent": "TheEthicalRun-ThesisServer/1.0"
+                },
+                body: JSON.stringify(req.body),
+            });
+
+            const data = await response.json();
+
+            // If this key hit a Rate Limit (429) or is Invalid (401), cool it down and try the next key!
+            if (response.status === 429 || response.status === 401) {
+                const errMsg = (data?.error?.message || "").toLowerCase();
+                const retryAfterHeader = parseInt(response.headers.get("retry-after"), 10);
+
+                let cooldownMs = 30 * 1000; // Default 30s cooldown for 8K TPM / 30 RPM spikes
+                if (errMsg.includes("tokens per day") || errMsg.includes("tpd") || errMsg.includes("requests per day")) {
+                    cooldownMs = 60 * 60 * 1000; // 1 hour cooldown if 200K TPD is exhausted
+                } else if (!isNaN(retryAfterHeader) && retryAfterHeader > 0) {
+                    cooldownMs = retryAfterHeader * 1000; // Use Groq's exact retry-after seconds
+                }
+
+                keyCooldowns.set(apiKey, Date.now() + cooldownMs);
+                console.warn(`[Groq Pool] Key #${keyIdx + 1}/${groqKeyPool.length} hit ${response.status} (cooling down ${Math.round(cooldownMs / 1000)}s). Switching key...`);
+                lastErrorData = data;
+                lastStatus = response.status;
+                continue;
+            }
+
+            // Success! Advance round-robin pointer for the next request and return response
+            currentKeyIndex = (keyIdx + 1) % groqKeyPool.length;
+            keyCooldowns.delete(apiKey);
+            return res.status(response.status).json(data);
+
+        } catch (err) {
+            lastErrorData = { error: { message: err.message || "Failed to contact AI server." } };
+            lastStatus = 500;
+        }
     }
+
+    // Only reached if EVERY key in the pool failed or is rate-limited
+    return res.status(lastStatus).json(lastErrorData || { error: { message: "All API keys in pool are currently rate-limited." } });
 });
 
 // 7. Admin Route to Download All Participant JSON Logs
