@@ -258,7 +258,6 @@ app.post('/api/post_submit', async (req, res) => {
         time_cuq_feedback
     };
 
-    userData.finalFeedback = feedbackData;
     if (framework && userData.runs[framework]) {
         userData.runs[framework].feedback = feedbackData;
     }
@@ -434,8 +433,7 @@ app.get('/api/admin/export-csv', (req, res) => {
         "pre_s1", "pre_s2", "pre_s3", "pre_s4", "pre_score_total",
         "post_s1", "post_s2", "post_s3", "post_s4", "post_score_total",
         "learning_gain",
-        "game_completed", "game_duration_sec", "batteries_collected", "answer_score", "hints_used", "chat_turns",
-        "samValence", "samArousal", "cuqScore",
+        "run_order", "game_result", "scenarios_completed", "game_duration_sec", "batteries_collected", "answer_score", "hints_used", "chat_turns",        "samValence", "samArousal", "cuqScore",
         "cuq_1", "cuq_2", "cuq_3", "cuq_4", "cuq_5", "cuq_6", "cuq_7", "cuq_8",
         "cuq_9", "cuq_10", "cuq_11", "cuq_12", "cuq_13", "cuq_14", "cuq_15", "cuq_16",
         "time_consent", "time_framework_select", "time_demographics",
@@ -489,6 +487,12 @@ app.get('/api/admin/export-csv', (req, res) => {
                     post.time_post_scenario_3, post.time_post_scenario_4
                 ].reduce((acc, v) => acc + (parseFloat(v) || 0), 0).toFixed(2);
 
+                const gameDurationSec = (game.durationSeconds != null)
+                    ? game.durationSeconds
+                    : (r.gameStartTimestamp && game.unixTimestamp)
+                        ? ((game.unixTimestamp - r.gameStartTimestamp) / 1000).toFixed(2)
+                        : "";
+
                 const row = [
                     u.userId || file.replace('.json', ''),
                     u.createdAt || "",
@@ -508,12 +512,14 @@ app.get('/api/admin/export-csv', (req, res) => {
                     post.post_scenario_4 || post.scenario_4 || "",
                     r.post ? postScore : "",
                     learningGain,
-                    r.gameLogs ? "true" : "false",
-                    game.durationSeconds || "",
-                    game.totalCollected ?? "",
-                    game.successfulAnswerScoreTotal ?? "",
+                    r.runOrder ?? "",
+                    game.result || (r.gameLogs ? "UNKNOWN" : "NOT_STARTED"),
+                    game.scenariosCompleted ?? "",
+                    gameDurationSec,
+                    game.batteriesCollected ?? game.totalCollected ?? "",
+                    game.score ?? game.successfulAnswerScoreTotal ?? "",
                     game.hintsUsed ?? "",
-                    Array.isArray(game.chatLog) ? game.chatLog.length : "",
+                    Array.isArray(game.chatHistory) ? game.chatHistory.length : (Array.isArray(game.chatLog) ? game.chatLog.length : ""),
                     fb.samValence ?? "",
                     fb.samArousal ?? "",
                     fb.cuqScore ?? "",
