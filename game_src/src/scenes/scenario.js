@@ -1060,20 +1060,19 @@ export default function scenario() {
 
     // --- Focus and input handlers ---
     inputBg.onClick(() => {
-        if (!isFetching) {
-            playClick();
-            if (isMobileInputMode) {
-                requestMobileKeyboard();
-            } else {
-                hiddenInput.focus();
-            }
-            resetInputCursorBlink();
-            needsInputRender = true;
+        if (!isChatActive || isFetching || isHintModalOpen || canExit) return;
+        playClick();
+        if (isMobileInputMode) {
+            requestMobileKeyboard();
+        } else {
+            hiddenInput.focus();
         }
+        resetInputCursorBlink();
+        needsInputRender = true;
     });
 
     k.onMousePress(() => {
-        if (canExit) return;
+        if (!isChatActive || isHintModalOpen || canExit) return;
         if (!isFetching && textWindow.hasPoint(k.mousePos())) {
             playClick();
         }
@@ -1085,9 +1084,9 @@ export default function scenario() {
         e.stopPropagation();
 
         if (e.key === "Enter") {
-            e.preventDefault(); // 🟢 ALWAYS block the browser's default Enter key behavior!
+            e.preventDefault(); // ALWAYS block the browser's default Enter key behavior!
             
-            if (isFetching) return; // Now we safely ignore it if the bot is thinking
+            if (isFetching) return; // Now we safely ignore it if the moral guide is thinking
 
             if (e.shiftKey) {
                 insertTextAtInputSelection("\n");
@@ -1157,10 +1156,9 @@ export default function scenario() {
     }
 
     sendBtn.onClick(() => {
-        if (!isFetching) {
-            if (playSendAttemptSound()) {
-                handleUserSend();
-            }
+        if (!isChatActive || isFetching || isHintModalOpen || canExit) return;
+        if (playSendAttemptSound()) {
+            handleUserSend();
         }
     });
 
@@ -1443,7 +1441,7 @@ export default function scenario() {
 
                 const completionBannerText = hintUsedInThisScenario
                     ? `SCORE: ${botReply.score}/10 (HINT USED — NO PROGRESS GAINED)\n\nTHE PORTAL OPENED, BUT THIS SCENARIO DID NOT COUNT!\nPRESS SPACE/CLICK/TOUCH TO CONTINUE.`
-                    : `SCORE: ${botReply.score}/10\n\nTHE BOT IS SATISFIED AND THE PORTAL OPENED!\nPRESS SPACE/CLICK/TOUCH TO COLLECT YOUR REWARD AND CONTINUE.`;
+                    : `SCORE: ${botReply.score}/10\n\nTHE MORAL GUIDE IS SATISFIED AND THE PORTAL OPENED!\nPRESS SPACE/CLICK/TOUCH TO COLLECT YOUR REWARD AND CONTINUE.`;
 
                 k.add([
                     k.text(
@@ -1532,6 +1530,7 @@ export default function scenario() {
             k.setData("total-batteries", 0);
             k.setData("game-speed", 600);
             k.setData("return-reward", false);
+            playPortal();
             k.go("completed");
             return;
         }

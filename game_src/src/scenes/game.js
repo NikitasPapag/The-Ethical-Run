@@ -201,7 +201,7 @@ function showAnswerScoreUI(scoreGainPercent) {
 
     const originalJump = player.jump;
     player.jump = (...args) => {
-        if (isGameOver) return;
+        if (isGameOver || isTransitioning) return;
         k.play("jump", { volume: JUMP_VOLUME });
         originalJump.apply(player, args);
     };

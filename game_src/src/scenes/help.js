@@ -37,18 +37,21 @@ For the first portion of the game, the player will try to collect as many
 batteries as possible, while avoiding and killing enemies, pressing only 
 Space/Click/Touch. Colliding with an enemy will damage the player's health.
 
-After passing through a portal, a chatbot will appear and the player will
-then have to interact with it, by discussing a random ethical dilemma on the
-specific framework of ethics that was chosen at the beginning of the game.
-The role of the chatbot is to guide the player, through conversation, and make
-sure that the ethical dilemma and the applied framework is well understood.
+After passing through a portal, The Moral Guide will appear and the player
+will then have to interact with it, by discussing a random ethical dilemma on 
+the specific framework of ethics that was chosen at the beginning of the game.
+The role of The Moral Guide is to guide the player, through conversation, 
+and make sure that the ethical dilemma and the applied framework is well 
+understood.
 
-If the chatbot is not satisfied with the player's answers, it will ask more
-questions or ask the player to explain their reasoning. If the player finds
-it difficult to understand the ethical dilemma or the framework, batteries
-can be redeemed for hints through the specific button.
+If The Moral Guide is not satisfied with the player's answers, it will ask 
+more questions or ask the player to explain their reasoning. If the player finds 
+it difficult to understand the ethical dilemma or the framework, batteries can 
+be redeemed for hints through the specific button. The scenarios in which a 
+hint was used don't count as game progress. After 3 hints, the player loses
+the ability to earn batteries for the rest of the game.
 
-When the chatbot is satisfied with the answers, the player will be rewarded
+When The Moral Guide is satisfied with the answers, the player will be rewarded
 and able to continue his run, in order to collect more batteries and face more
 ethical dilemmas.
 

@@ -272,11 +272,10 @@ app.post('/api/post_submit', async (req, res) => {
     let exploreButton = '';
     if (completed.length < 3) {
         exploreButton = `
-            <a href="/pre_questionnaire.html?userId=${userId}" style="text-decoration: none;">
-                <button type="button" class="btn-start" style="max-width: 550px; margin: 0 auto 20px auto; font-size: 16px; line-height: 1.8;">
-                    EXPLORE A DIFFERENT ETHICAL PATH
-                </button>
-            </a>
+            <button type="button" class="btn-start" style="max-width: 550px; margin: 0 auto 20px auto; font-size: 16px; line-height: 1.8;"
+                    onclick="navigateWithClick('/pre_questionnaire.html?userId=${userId}')">
+                EXPLORE A DIFFERENT ETHICAL PATH
+            </button>
         `;
     }
 
@@ -290,6 +289,7 @@ app.post('/api/post_submit', async (req, res) => {
             <link rel="stylesheet" href="/style.css">
         </head>
         <body>
+            <audio id="click-sound" src="/click.wav" preload="auto"></audio>
             <div class="form-group" style="text-align: center; margin-top: 100px;">
                 <h1 class="title-finish" style="margin-bottom: 30px;">EXPERIMENT CONCLUDED</h1>
                 <p style="color: #dddddd; margin-bottom: 40px;">
@@ -297,12 +297,18 @@ app.post('/api/post_submit', async (req, res) => {
                     Thank you for your vital contribution to this research.
                 </p>
                 ${exploreButton}
-                <a href="/" style="text-decoration: none;">
-                    <button type="button" class="btn-nav" style="max-width: 550px; margin: 0 auto; font-size: 16px; line-height: 1.8;">
-                        INITIALIZE NEW PARTICIPANT
-                    </button>
-                </a>
+                <button type="button" class="btn-nav" style="max-width: 550px; margin: 0 auto; font-size: 16px; line-height: 1.8;"
+                        onclick="navigateWithClick('/')">
+                    INITIALIZE NEW PARTICIPANT
+                </button>
             </div>
+            <script>
+                function navigateWithClick(url) {
+                    const sound = new Audio('/click.wav');
+                    sound.play().catch(() => {});
+                    setTimeout(() => { window.location.href = url; }, 150);
+                }
+            </script>
         </body>
         </html>
     `);

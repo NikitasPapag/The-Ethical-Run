@@ -157,36 +157,6 @@
             });
         }
 
-        const FRAMEWORK_SUMMARIES = {
-            utilitarianism: {
-                title: "UTILITARIANISM",
-                text: "Focuses on the consequences of an action. The morally right choice is the one that produces the greatest overall good and minimizes harm for everyone affected. Look beyond individual rules to weigh the net benefit vs. total harm."
-            },
-            deontological: {
-                title: "DEONTOLOGY",
-                text: "Focuses on moral duties, rules, promises, and individual rights regardless of the consequences. Certain actions are intrinsically right or wrong, and people must never be treated merely as a means to an end."
-            },
-            virtue: {
-                title: "VIRTUE ETHICS",
-                text: "Focuses on moral character and the kind of person or professional one is becoming. Instead of just following rules or calculating outcomes, it asks whether an action practices virtues like honesty, empathy, wisdom, and courage."
-            }
-        };
-
-        function openHelpModal() {
-            playClick();
-            const fw = document.getElementById('framework').value || 'utilitarianism';
-            const info = FRAMEWORK_SUMMARIES[fw];
-            if (!info) return;
-            document.getElementById('help-modal-title').innerText = info.title;
-            document.getElementById('help-modal-text').innerText = info.text;
-            document.getElementById('help-modal').classList.add('active');
-        }
-
-        function closeHelpModal() {
-            playClick();
-            document.getElementById('help-modal').classList.remove('active');
-        }
-
         const CUQ_QUESTIONS = [
             "1. The Ethical Guide's personality was realistic and engaging.",
             "2. The Ethical Guide seemed too robotic.",
