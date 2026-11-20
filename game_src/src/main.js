@@ -71,6 +71,7 @@ k.loadSprite("portal-reversed", "graphics/portal-reversed.png", {
 });
 
 k.loadFont("mania", "fonts/mania.ttf");
+k.loadFont("text-font", "fonts/DejaVuSans.ttf");
 
 k.loadSound("ambiance", "audio/ambiance.mp3");
 k.loadSound("click", "audio/click.wav");

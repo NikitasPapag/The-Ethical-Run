@@ -59,7 +59,7 @@ label {
 .checkbox-container span,
 .modal-message,
 textarea {
-    font-family: Verdana, sans-serif !important;
+    font-family: Verdana, 'DejaVu Sans', sans-serif !important;
     font-size: 24px !important;
     line-height: 1.6 !important;
     letter-spacing: 0px;
@@ -404,7 +404,8 @@ button:active {
 
 /* Larger arrow pinned to the top-right of the question block */
 .form-group.dropdown-group::after {
-    content: "▼";
+    content: "\25BC\FE0E";
+    font-family: 'DejaVu Sans', sans-serif;
     position: absolute;
     top: 22px;
     right: 22px;
