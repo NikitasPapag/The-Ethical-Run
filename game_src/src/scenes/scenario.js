@@ -22,13 +22,12 @@ const MAX_RENDERED_CHAT_CHARS = 6000;
 // --- LOCAL JAILBREAK / META-INSTRUCTION BLOCKLIST ---
 const MANIPULATION_PATTERNS = [
     /\[paid_hint_redeemed\]/i, // <-- BLOCK SPOOFED TAGS
-    /ignore.{0,40}(instructions|rules|prompt|system)/i,
-    /disregard.{0,40}(instructions|rules|prompt|system)/i,
-    /(reveal|show|print).{0,40}(system prompt|hidden prompt|developer prompt)/i,
-    /(bypass|override|break).{0,40}(rules|guardrails|safety)/i,
-    /(give|set).{0,30}(score|rating).{0,20}(10|9|high|pass)/i,
-    /(you are now|act as).{0,40}(system|judge|developer|admin)/i,
-    /do not follow.{0,40}(rules|instructions)/i,
+    /\b(ignore|disregard)\b.{0,30}\b(your|all|previous|prior|above|system)\b.{0,20}\b(instructions|rules|prompt|directives)\b/i,
+    /\b(reveal|show|print|output)\b.{0,30}\b(system prompt|hidden prompt|developer prompt|your instructions)\b/i,
+    /\b(bypass|override|break)\b.{0,20}\b(your|the ai'?s?)\b.{0,20}\b(rules|guardrails|safety|filters)\b/i,
+    /\b(give|set|award)\s+me\b.{0,25}\b(score|rating|10|9|pass)\b/i,
+    /\b(you are now|act as|pretend to be)\b.{0,30}\b(system|developer|admin|unrestricted|jailbroken)\b/i,
+    /\bdo not follow\s+your\b.{0,20}\b(rules|instructions)\b/i,
 ];
 
 function escapeChatMarkup(value = "") {
