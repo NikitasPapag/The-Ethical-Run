@@ -233,7 +233,28 @@
                         e.preventDefault();
                     }
                     playClick();
-                    group.classList.toggle('dropdown-open');
+                    const isOpen = group.classList.toggle('dropdown-open');
+
+                    if (isOpen) {
+                        requestAnimationFrame(() => {
+                            const rect = group.getBoundingClientRect();
+                            const padding = 24;
+
+                            if (rect.height + padding * 2 > window.innerHeight) {
+                                // Very tall dropdown (e.g., Field of Study on smaller screens): align top of question in view
+                                window.scrollBy({
+                                    top: rect.top - padding,
+                                    behavior: 'smooth'
+                                });
+                            } else if (rect.bottom > window.innerHeight - padding) {
+                                // Options extend below viewport: scroll down just enough to reveal them
+                                window.scrollBy({
+                                    top: rect.bottom - window.innerHeight + padding,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        });
+                    }
                 });
 
                 // Selecting an answer highlights it under the question and closes the list

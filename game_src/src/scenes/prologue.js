@@ -8,7 +8,7 @@ export default function prologue() {
   k.add([
       k.text(
         `
-          This is a game made by NikitasPapag for his thesis project
+          This is a game made by Nikitas Papangelopoulos for his thesis project
         `,
         { font: "mania", size: 42 }
       ),

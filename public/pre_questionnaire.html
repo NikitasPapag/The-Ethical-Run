@@ -209,7 +209,28 @@
                         e.preventDefault();
                     }
                     playClick();
-                    group.classList.toggle('dropdown-open');
+                    const isOpen = group.classList.toggle('dropdown-open');
+
+                    if (isOpen) {
+                        requestAnimationFrame(() => {
+                            const rect = group.getBoundingClientRect();
+                            const padding = 24;
+
+                            if (rect.height + padding * 2 > window.innerHeight) {
+                                // Very tall dropdown (e.g., Field of Study on smaller screens): align top of question in view
+                                window.scrollBy({
+                                    top: rect.top - padding,
+                                    behavior: 'smooth'
+                                });
+                            } else if (rect.bottom > window.innerHeight - padding) {
+                                // Options extend below viewport: scroll down just enough to reveal them
+                                window.scrollBy({
+                                    top: rect.bottom - window.innerHeight + padding,
+                                    behavior: 'smooth'
+                                });
+                            }
+                        });
+                    }
                 });
 
                 // Selecting an answer highlights it under the question and closes the list
@@ -518,6 +539,16 @@
                     <label><input type="radio" name="age" value="18_22"><span class="radio-label">18 - 22</span></label>
                     <label><input type="radio" name="age" value="23_27"><span class="radio-label">23 - 27</span></label>
                     <label><input type="radio" name="age" value="28_plus"><span class="radio-label">28+</span></label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>GENDER:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="gender" value="male" required><span class="radio-label">Male</span></label>
+                    <label><input type="radio" name="gender" value="female"><span class="radio-label">Female</span></label>
+                    <label><input type="radio" name="gender" value="other"><span class="radio-label">Other</span></label>
+                    <label><input type="radio" name="gender" value="prefer_not_to_disclose"><span class="radio-label">Prefer not to disclose</span></label>
                 </div>
             </div>
 

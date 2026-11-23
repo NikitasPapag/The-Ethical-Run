@@ -139,6 +139,7 @@ app.post('/api/pre_submit', async (req, res) => {
         userId, 
         framework, 
         age, 
+        gender,
         major, 
         philosophyKnowledge, 
         aiFrequency, 
@@ -158,6 +159,7 @@ app.post('/api/pre_submit', async (req, res) => {
     if (age && major) {
         userData.demographics = { 
             age, 
+            gender,
             major, 
             philosophyKnowledge, 
             aiFrequency,
@@ -451,7 +453,7 @@ app.get('/api/admin/export-csv', (req, res) => {
 
     const headers = [
         "userId", "timestamp", "framework",
-        "age", "major", "aiFrequency", "frameworkExperience",
+        "age", "gender", "major", "aiFrequency", "frameworkExperience",
         "pre_s1", "pre_s2", "pre_s3", "pre_s4", "pre_score_total",
         "post_s1", "post_s2", "post_s3", "post_s4", "post_score_total",
         "learning_gain",
@@ -523,6 +525,7 @@ app.get('/api/admin/export-csv', (req, res) => {
                     u.createdAt || "",
                     fw,
                     demo.age || "",
+                    demo.gender || "",
                     demo.major || "",
                     demo.aiFrequency || "",
                     r.philosophyKnowledge || demo.philosophyKnowledge || "",
