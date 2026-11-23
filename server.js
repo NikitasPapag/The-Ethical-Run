@@ -141,6 +141,7 @@ app.post('/api/pre_submit', async (req, res) => {
         age, 
         gender,
         major, 
+        englishProficiency,
         philosophyKnowledge, 
         aiFrequency, 
         time_consent, 
@@ -161,6 +162,7 @@ app.post('/api/pre_submit', async (req, res) => {
             age, 
             gender,
             major, 
+            englishProficiency,
             philosophyKnowledge, 
             aiFrequency,
             time_consent,
@@ -190,29 +192,55 @@ app.post('/api/pre_submit', async (req, res) => {
     res.redirect(`/game/index.html?userId=${userId}&framework=${framework}`);
 });
 
+function normalizeFrameworkKey(fw) {
+    const key = String(fw || '').toLowerCase().trim();
+    if (key.includes('utilitarian')) return 'utilitarianism';
+    if (key.includes('deontolog')) return 'deontological';
+    if (key.includes('virtue')) return 'virtue';
+    return key || 'unknown';
+}
+
 // 4. Game Logs Hook
 app.post('/api/gamelogs', async (req, res) => {
     const { userId, logs } = req.body;
+    if (!userId || !logs) {
+        return res.status(400).json({ success: false, error: 'Missing userId or logs' });
+    }
+
     const userFile = path.join(RESULTS_DIR, `${userId}.json`);
-    
-    let userData = { runs: {} };
+    let userData = { userId, runs: {} };
     if (fs.existsSync(userFile)) userData = JSON.parse(fs.readFileSync(userFile));
-    
-    // Use the framework reported by Kaplay logs, or fall back to the pre-questionnaire choice
-    const framework = (logs && logs.framework) ? logs.framework : (userData.currentFramework || 'unknown');
+
+    const framework = normalizeFrameworkKey(logs.framework || userData.currentFramework);
     userData.currentFramework = framework;
 
     if (!userData.runs) userData.runs = {};
     if (!userData.runs[framework]) userData.runs[framework] = {};
-    
-    if (logs && logs.result === 'ABORTED') {
-        if (!Array.isArray(userData.runs[framework].abortedRuns)) {
-            userData.runs[framework].abortedRuns = [];
+
+    const runEntry = userData.runs[framework];
+
+    if (logs.result === 'SCENARIO_COMPLETED') {
+        if (!Array.isArray(runEntry.completedScenarios)) {
+            runEntry.completedScenarios = [];
         }
-        userData.runs[framework].abortedRuns.push(logs);
-        userData.runs[framework].abortCount = userData.runs[framework].abortedRuns.length;
+        runEntry.completedScenarios.push(logs);
+    } else if (logs.result === 'ABORTED') {
+        if (!Array.isArray(runEntry.abortedRuns)) {
+            runEntry.abortedRuns = [];
+        }
+        runEntry.abortedRuns.push(logs);
+        runEntry.abortCount = runEntry.abortedRuns.length;
+    } else if (logs.result === 'GAMEOVER') {
+        if (!Array.isArray(runEntry.gameOverRuns)) {
+            runEntry.gameOverRuns = [];
+        }
+        runEntry.gameOverRuns.push(logs);
+        // Only set gameLogs if the participant hasn't already completed a winning run
+        if (!runEntry.gameLogs || runEntry.gameLogs.result !== 'COMPLETED') {
+            runEntry.gameLogs = logs;
+        }
     } else {
-        userData.runs[framework].gameLogs = logs;
+        runEntry.gameLogs = logs;
     }
 
     await saveParticipantData(userId, userData);
@@ -453,7 +481,7 @@ app.get('/api/admin/export-csv', (req, res) => {
 
     const headers = [
         "userId", "timestamp", "framework",
-        "age", "gender", "major", "aiFrequency", "frameworkExperience",
+        "age", "gender", "major", "englishProficiency", "aiFrequency", "frameworkExperience",
         "pre_s1", "pre_s2", "pre_s3", "pre_s4", "pre_score_total",
         "post_s1", "post_s2", "post_s3", "post_s4", "post_score_total",
         "learning_gain",
@@ -527,6 +555,7 @@ app.get('/api/admin/export-csv', (req, res) => {
                     demo.age || "",
                     demo.gender || "",
                     demo.major || "",
+                    demo.englishProficiency || "",
                     demo.aiFrequency || "",
                     r.philosophyKnowledge || demo.philosophyKnowledge || "",
                     pre.pre_scenario_1 || pre.scenario_1 || "",

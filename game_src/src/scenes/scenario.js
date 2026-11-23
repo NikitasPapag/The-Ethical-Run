@@ -328,6 +328,31 @@ function reportAbortedRun() {
     }).catch((err) => console.error("Failed to report aborted run:", err));
 }
 
+// --- Save a single completed scenario immediately to backend / MongoDB ---
+function saveScenarioCheckpoint(payload) {
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("userId");
+    if (!userId) return;
+
+    const framework = params.get("framework")
+        || (k.getData("selected-framework") || "unknown").toLowerCase();
+
+    fetch("/api/gamelogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId,
+            logs: {
+                result: "SCENARIO_COMPLETED",
+                framework,
+                runDate: new Date().toLocaleString(),
+                unixTimestamp: Date.now(),
+                ...payload,
+            },
+        }),
+    }).catch((err) => console.error("Failed to save scenario checkpoint:", err));
+}
+
 export default function scenario() {
     startAmbiance();
 
@@ -381,6 +406,8 @@ export default function scenario() {
     k.setData("used-scenarios-by-framework", usedByFramework);
 
     const scenarioData = possibleScenarios[selectedScenarioIndex];
+
+    const scenarioLogStartIndex = runChatLog.length;
 
     // --- Run-log header for this scenario ---
     runChatLog.push(`\n==================================================`);
@@ -1431,6 +1458,20 @@ export default function scenario() {
                     // Hint was used: scenario does not count toward progress or answer score!
                     k.setData("last-answer-score-gain", 0);
                 }
+
+                saveScenarioCheckpoint({
+                    scenarioNumber,
+                    difficulty: difficultyLabel,
+                    scenarioText: scenarioData.text,
+                    botScore: botReply.score,
+                    hintUsed: hintUsedInThisScenario,
+                    countedTowardProgress: !hintUsedInThisScenario,
+                    scenariosCompletedSoFar: k.getData("scenario-progress", 0) || 0,
+                    scoreSoFar: getAnswerScorePercent(),
+                    hintsUsedSoFar: hintsUsedTotal,
+                    durationMs: Date.now() - scenarioStartTime,
+                    scenarioChat: runChatLog.slice(scenarioLogStartIndex),
+                });
 
                 playSatisfied();
                 k.add([
