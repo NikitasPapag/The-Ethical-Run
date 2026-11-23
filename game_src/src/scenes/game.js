@@ -254,11 +254,10 @@ function showAnswerScoreUI(scoreGainPercent) {
     let gameSpeed = BASE_GAME_SPEED; 
 
     const batteriesLocked = (k.getData("hints-used", 0) || 0) >= 3;
-    const hintUsedLastScenario = k.getData("hint-used-last-scenario", false);
 
     // --- GAMESPEED & RETURN LOGIC ---
     if (isReturningFromScenario) {
-        if (!batteriesLocked && !hintUsedLastScenario) {
+        if (!batteriesLocked) {
             score += 100;
             totalBatteries += 100; 
             k.setData("total-batteries", totalBatteries); 
@@ -269,7 +268,6 @@ function showAnswerScoreUI(scoreGainPercent) {
         showAnswerScoreUI(k.getData("last-answer-score-gain", 0) || 0);
 
         k.setData("return-reward", false); 
-        k.setData("hint-used-last-scenario", false);
         k.setData("last-answer-score-gain", 0);
         k.setData("saved-score", score);
         

@@ -282,7 +282,6 @@ function resetRunData() {
     k.setData("saved-score", 0);
     k.setData("total-batteries", 0);
     k.setData("return-reward", false);
-    k.setData("hint-used-last-scenario", false);
     k.setData("game-speed", 600);
     k.setData("log-downloaded", false);
     k.setData("used-scenarios-by-framework", {});
@@ -1235,9 +1234,14 @@ export default function scenario() {
             k.color(255, 50, 50),
         ]);
 
-        const warningText = nextHintNumber >= 3
-            ? `REDEEM HINT FOR ${hintCost} BATTERIES?\n\n• THIS SCENARIO WILL NOT COUNT AS PROGRESS.\n• WARNING (HINT ${nextHintNumber}): AFTER 3 HINTS, YOU CAN NO LONGER EARN BATTERIES IN ANY WAY!`
-            : `REDEEM HINT FOR ${hintCost} BATTERIES?\n\n• THIS SCENARIO WILL NOT COUNT TOWARD PROGRESS.\n• AFTER 3 HINTS USED (${ currentHints }/3 SO FAR), ALL BATTERY EARNINGS ARE PERMANENTLY DISABLED!`;
+        let warningText;
+        if (nextHintNumber < 3) {
+            warningText = `REDEEM HINT FOR ${hintCost} BATTERIES?\n\nHINTS USED SO FAR: ${currentHints}/3\nAFTER 3 HINTS, NO MORE BATTERIES WILL SPAWN OR BE EARNED!`;
+        } else if (nextHintNumber === 3) {
+            warningText = `REDEEM HINT FOR ${hintCost} BATTERIES?\n\nWARNING (HINT 3/3): AFTER THIS HINT, NO MORE BATTERIES WILL SPAWN OR BE EARNED!`;
+        } else {
+            warningText = `REDEEM HINT FOR ${hintCost} BATTERIES?\n\nBATTERY LOCK ACTIVE (${currentHints} HINTS USED): NO MORE BATTERIES WILL SPAWN OR BE EARNED.`;
+        }
 
         hintModal.add([
             k.text(warningText, {
@@ -1446,17 +1450,12 @@ export default function scenario() {
                 const hintsUsedTotal = k.getData("hints-used") || 0;
                 const batteriesLocked = hintsUsedTotal >= 3;
 
-                if (!hintUsedInThisScenario) {
-                    const successfulScoreTotal = k.getData("successful-answer-score-total", 0) || 0;
-                    const updatedSuccessfulScoreTotal = successfulScoreTotal + botReply.score;
-                    k.setData("successful-answer-score-total", updatedSuccessfulScoreTotal);
-                    k.setData("current-answer-score", Math.min(100, Math.ceil(updatedSuccessfulScoreTotal * 2.5)));
-                    k.setData("last-answer-score-gain", Math.ceil(botReply.score * 2.5));
-                    k.setData("scenario-progress", progress + 1);
-                } else {
-                    // Hint was used: scenario does not count toward progress or answer score!
-                    k.setData("last-answer-score-gain", 0);
-                }
+                const successfulScoreTotal = k.getData("successful-answer-score-total", 0) || 0;
+                const updatedSuccessfulScoreTotal = successfulScoreTotal + botReply.score;
+                k.setData("successful-answer-score-total", updatedSuccessfulScoreTotal);
+                k.setData("current-answer-score", Math.min(100, Math.ceil(updatedSuccessfulScoreTotal * 2.5)));
+                k.setData("last-answer-score-gain", Math.ceil(botReply.score * 2.5));
+                k.setData("scenario-progress", progress + 1);
 
                 saveScenarioCheckpoint({
                     scenarioNumber,
@@ -1464,7 +1463,7 @@ export default function scenario() {
                     scenarioText: scenarioData.text,
                     botScore: botReply.score,
                     hintUsed: hintUsedInThisScenario,
-                    countedTowardProgress: !hintUsedInThisScenario,
+                    countedTowardProgress: true,
                     scenariosCompletedSoFar: k.getData("scenario-progress", 0) || 0,
                     scoreSoFar: getAnswerScorePercent(),
                     hintsUsedSoFar: hintsUsedTotal,
@@ -1479,11 +1478,11 @@ export default function scenario() {
                     k.anchor("center"),
                     k.color(20, 20, 40),
                     k.opacity(0.95),
-                    k.outline(6, hintUsedInThisScenario ? k.rgb(255, 200, 0) : k.GREEN),
+                    k.outline(6, k.GREEN),
                 ]);
 
-                const completionBannerText = hintUsedInThisScenario
-                    ? `SCORE: ${botReply.score}/10 (HINT USED — NO PROGRESS GAINED)\n\nTHE PORTAL OPENED, BUT THIS SCENARIO DID NOT COUNT!\nPRESS SPACE/CLICK/TOUCH TO CONTINUE.`
+                const completionBannerText = batteriesLocked
+                    ? `SCORE: ${botReply.score}/10\n\nTHE MORAL GUIDE IS SATISFIED AND THE PORTAL OPENED!\nPRESS SPACE/CLICK/TOUCH TO CONTINUE.`
                     : `SCORE: ${botReply.score}/10\n\nTHE MORAL GUIDE IS SATISFIED AND THE PORTAL OPENED!\nPRESS SPACE/CLICK/TOUCH TO COLLECT YOUR REWARD AND CONTINUE.`;
 
                 k.add([
@@ -1498,16 +1497,15 @@ export default function scenario() {
                     ),
                     k.pos(k.center().x, k.center().y - 100),
                     k.anchor("center"),
-                    hintUsedInThisScenario ? k.color(255, 215, 0) : k.color(0, 255, 0),
+                    k.color(0, 255, 0),
                 ]);
 
-                if (!batteriesLocked && !hintUsedInThisScenario) {
+                if (!batteriesLocked) {
                     const totalCollected = k.getData("total-collected", 0);
                     k.setData("total-collected", totalCollected + 100);
                 }
 
                 k.setData("return-reward", true);
-                k.setData("hint-used-last-scenario", hintUsedInThisScenario);
                 canExit = true;
                 isChatActive = false;
 

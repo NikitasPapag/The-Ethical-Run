@@ -173,11 +173,31 @@
 
         function openHelpModal() {
             playClick();
-            const fw = document.getElementById('selected-framework').value;
-            const info = FRAMEWORK_SUMMARIES[fw];
-            if (!info) return;
-            document.getElementById('help-modal-title').innerText = info.title;
-            document.getElementById('help-modal-text').innerText = info.text;
+            const titleEl = document.getElementById('help-modal-title');
+            const textEl = document.getElementById('help-modal-text');
+            const allEl = document.getElementById('help-modal-all');
+
+            if (currentStage === 1) {
+                titleEl.style.display = "none";
+                textEl.style.display = "none";
+                allEl.style.display = "block";
+                allEl.innerHTML = Object.values(FRAMEWORK_SUMMARIES)
+                    .map((fw, idx) => `
+                        <div class="modal-title info-title" style="margin-top: ${idx === 0 ? '0' : '24px'}; margin-bottom: 10px;">${fw.title}</div>
+                        <p class="modal-message" style="text-align: left; margin-bottom: 16px;">${fw.text}</p>
+                    `)
+                    .join('');
+            } else {
+                const fw = document.getElementById('selected-framework').value;
+                const info = FRAMEWORK_SUMMARIES[fw];
+                if (!info) return;
+                allEl.style.display = "none";
+                titleEl.style.display = "";
+                textEl.style.display = "";
+                titleEl.innerText = info.title;
+                textEl.innerText = info.text;
+            }
+
             document.getElementById('help-modal').classList.add('active');
         }
 
@@ -303,9 +323,9 @@
 
             const helpBtn = document.getElementById('help-btn');
             const selectedFw = document.getElementById('selected-framework').value;
-            // Only show the ? button after a framework is selected (Stages 2+)
+            // Show the ? button on Framework Selection (Stage 1) and after a framework is selected (Stages 2+)
             if (helpBtn) {
-                if (stageNum >= 2 && selectedFw) {
+                if (stageNum === 1 || (stageNum >= 2 && selectedFw)) {
                     helpBtn.classList.add('visible');
                 } else {
                     helpBtn.classList.remove('visible');
@@ -427,7 +447,8 @@
     <div id="help-modal" class="modal-overlay">
         <div class="modal-box info-box">
             <div id="help-modal-title" class="modal-title info-title"></div>
-            <p id="help-modal-text" class="modal-message" style="text-align: justify;"></p>
+            <div id="help-modal-all" style="display: none; max-height: 55vh; overflow-y: auto;"></div>
+            <p id="help-modal-text" class="modal-message" style="text-align: left;"></p>
             <button type="button" class="btn-info-modal" onclick="closeHelpModal()">RESUME</button>
         </div>
     </div>
@@ -451,11 +472,11 @@
             <p class="subtitle">Informed Consent for Study Participation</p>
             
             <div class="form-group consent-box" style="text-align: left;">
-                <p>You are invited to take part in the user study "The Ethical Run". The study is conducted by Nikitas Papangelopoulos and overseen by Andreas Komninos at Computer Engineering and Informatics Department. We expect about 50 participants. Data collection is planned from 2026-11-23 to 2026-12-31. Key points:</p>
+                <p>You are invited to take part in the user study "The Ethical Run". The study is conducted by Nikitas Papangelopoulos and overseen by Andreas Komninos at Computer Engineering and Informatics Department. We expect about 30 participants. Data collection is planned from 2026-11-23 to 2026-12-31. Key points:</p>
                 
                 <ul class="consent-list">
                     <li>Participation is voluntary. You may stop at any time without penalty or withdraw your consent</li>
-                    <li>One session of the user study takes about 20 minutes</li>
+                    <li>One session of the user study takes about 30 minutes</li>
                     <li>You will not receive compensation for participating</li>
                     <li>We collect demographic information (e.g. age and gender) for analysis</li>
                     <li>The study may involve collecting the following data: your input</li>
