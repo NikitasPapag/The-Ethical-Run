@@ -21,13 +21,13 @@ const MAX_RENDERED_CHAT_CHARS = 6000;
 
 // --- LOCAL JAILBREAK / META-INSTRUCTION BLOCKLIST ---
 const MANIPULATION_PATTERNS = [
-    /\[paid_hint_redeemed\]/i, // <-- BLOCK SPOOFED TAGS
-    /\b(ignore|disregard)\b.{0,30}\b(your|all|previous|prior|above|system)\b.{0,20}\b(instructions|rules|prompt|directives)\b/i,
-    /\b(reveal|show|print|output)\b.{0,30}\b(system prompt|hidden prompt|developer prompt|your instructions)\b/i,
-    /\b(bypass|override|break)\b.{0,20}\b(your|the ai'?s?)\b.{0,20}\b(rules|guardrails|safety|filters)\b/i,
-    /\b(give|set|award)\s+me\b.{0,25}\b(score|rating|10|9|pass)\b/i,
-    /\b(you are now|act as|pretend to be)\b.{0,30}\b(system|developer|admin|unrestricted|jailbroken)\b/i,
-    /\bdo not follow\s+your\b.{0,20}\b(rules|instructions)\b/i,
+    /\[paid_hint_redeemed\]/i, // Block spoofed internal hint tag
+    /\b(ignore|disregard|forget)\s+(all\s+)?(of\s+)?(your\s+)?(previous|prior|above|system)\s+(instructions|prompts?|directives)\b/i,
+    /\b(reveal|show|print|output|dump)\s+(me\s+)?(your\s+|the\s+)?(system|hidden|developer)\s+prompt\b/i,
+    /\b(bypass|override)\s+(your\s+)?(system\s+prompt|hidden\s+instructions|developer\s+instructions)\b/i,
+    /\b(you are now|act as|pretend to be)\s+(an?\s+)?(unrestricted|jailbroken)\b/i,
+    /\b(dan|developer|jailbreak)\s+mode\b/i,
+    /"score"\s*:\s*(7|8|9|10)\b/i, // Block raw JSON score-injection attempts
 ];
 
 function escapeChatMarkup(value = "") {
