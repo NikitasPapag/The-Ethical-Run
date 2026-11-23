@@ -12,6 +12,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
-    "kaplay": "^3001.0.19"
+    "kaplay": "^3001.0.19",
+    "thesis_website": "file:.."
   }
 }

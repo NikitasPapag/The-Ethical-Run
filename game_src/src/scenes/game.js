@@ -38,7 +38,50 @@ export default function game() {
     const goBackToMenu = () => {
         if (!isSceneActive || isTransitioning) return;
         isTransitioning = true;
-        k.go("main-menu"); 
+
+        const params = new URLSearchParams(window.location.search);
+        const userId = params.get("userId");
+        if (userId) {
+            const framework = params.get("framework")
+                || (k.getData("selected-framework") || "unknown").toLowerCase();
+
+            const abortLog = {
+                result: "ABORTED",
+                abortedFrom: "game",
+                runDate: new Date().toLocaleString(),
+                unixTimestamp: Date.now(),
+                framework,
+                batteriesCollected: k.getData("total-collected", 0) || 0,
+                scenariosCompleted: k.getData("scenario-progress", 0) || 0,
+                score: Math.min(100, k.getData("current-answer-score", 0) || 0),
+                successfulAnswerScoreTotal: k.getData("successful-answer-score-total", 0) || 0,
+                hintsUsed: k.getData("hints-used", 0) || 0,
+                chatHistory: k.getData("run-chat-log", []) || [],
+            };
+
+            fetch("/api/gamelogs", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, logs: abortLog }),
+                keepalive: true,
+            }).catch((err) => console.error("Failed to report aborted run:", err));
+        }
+
+        k.setData("run-chat-log", []);
+        k.setData("hints-used", 0);
+        k.setData("scenario-progress", 0);
+        k.setData("successful-answer-score-total", 0);
+        k.setData("current-answer-score", 0);
+        k.setData("last-answer-score-gain", 0);
+        k.setData("total-collected", 0);
+        k.setData("saved-score", 0);
+        k.setData("total-batteries", 0);
+        k.setData("return-reward", false);
+        k.setData("hint-used-last-scenario", false);
+        k.setData("game-speed", BASE_GAME_SPEED);
+        k.setData("used-scenarios-by-framework", {});
+
+        k.go("main-menu");
     };
 
     // 3. Listen for PC players pressing Escape

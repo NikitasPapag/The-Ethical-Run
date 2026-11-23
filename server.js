@@ -203,7 +203,16 @@ app.post('/api/gamelogs', async (req, res) => {
     if (!userData.runs) userData.runs = {};
     if (!userData.runs[framework]) userData.runs[framework] = {};
     
-    userData.runs[framework].gameLogs = logs;
+    if (logs && logs.result === 'ABORTED') {
+        if (!Array.isArray(userData.runs[framework].abortedRuns)) {
+            userData.runs[framework].abortedRuns = [];
+        }
+        userData.runs[framework].abortedRuns.push(logs);
+        userData.runs[framework].abortCount = userData.runs[framework].abortedRuns.length;
+    } else {
+        userData.runs[framework].gameLogs = logs;
+    }
+
     await saveParticipantData(userId, userData);
     res.json({ success: true });
 });
@@ -439,7 +448,8 @@ app.get('/api/admin/export-csv', (req, res) => {
         "pre_s1", "pre_s2", "pre_s3", "pre_s4", "pre_score_total",
         "post_s1", "post_s2", "post_s3", "post_s4", "post_score_total",
         "learning_gain",
-        "run_order", "game_result", "scenarios_completed", "game_duration_sec", "batteries_collected", "answer_score", "hints_used", "chat_turns",        "samValence", "samArousal", "cuqScore",
+        "run_order", "game_result", "abort_count", "scenarios_completed", "game_duration_sec", "batteries_collected", "answer_score", "hints_used", "chat_turns",
+        "samValence", "samArousal", "cuqScore",
         "cuq_1", "cuq_2", "cuq_3", "cuq_4", "cuq_5", "cuq_6", "cuq_7", "cuq_8",
         "cuq_9", "cuq_10", "cuq_11", "cuq_12", "cuq_13", "cuq_14", "cuq_15", "cuq_16",
         "time_consent", "time_framework_select", "time_demographics",
@@ -499,6 +509,8 @@ app.get('/api/admin/export-csv', (req, res) => {
                         ? ((game.unixTimestamp - r.gameStartTimestamp) / 1000).toFixed(2)
                         : "";
 
+                const abortCount = Array.isArray(r.abortedRuns) ? r.abortedRuns.length : (r.abortCount || 0);
+
                 const row = [
                     u.userId || file.replace('.json', ''),
                     u.createdAt || "",
@@ -519,7 +531,8 @@ app.get('/api/admin/export-csv', (req, res) => {
                     r.post ? postScore : "",
                     learningGain,
                     r.runOrder ?? "",
-                    game.result || (r.gameLogs ? "UNKNOWN" : "NOT_STARTED"),
+                    game.result || (abortCount > 0 ? "ABORTED" : (r.gameLogs ? "UNKNOWN" : "NOT_STARTED")),
+                    abortCount,
                     game.scenariosCompleted ?? "",
                     gameDurationSec,
                     game.batteriesCollected ?? game.totalCollected ?? "",

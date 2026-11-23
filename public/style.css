@@ -4,6 +4,7 @@ body {
     color: #ffffff; 
     font-family: 'Press Start 2P', monospace;
     max-width: 1400px;
+    width: 70%;
     margin: 60px auto; 
     padding: 20px;
     line-height: 2;

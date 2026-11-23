@@ -280,6 +280,11 @@ function resetRunData() {
     k.setData("current-answer-score", 0);
     k.setData("last-answer-score-gain", 0);
     k.setData("total-collected", 0);
+    k.setData("saved-score", 0);
+    k.setData("total-batteries", 0);
+    k.setData("return-reward", false);
+    k.setData("hint-used-last-scenario", false);
+    k.setData("game-speed", 600);
     k.setData("log-downloaded", false);
     k.setData("used-scenarios-by-framework", {});
 }
@@ -292,37 +297,35 @@ function getHintCost() {
     return HINT_COSTS[Math.min(progress, HINT_COSTS.length - 1)];
 }
 
-// --- Export run log JSON to downloads ---
-function exportRunLog(runResult) {
-    if (k.getData("log-downloaded")) return;
+// --- Report aborted run to backend / MongoDB ---
+function reportAbortedRun() {
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get("userId");
+    if (!userId) return;
 
-        const runData = {
-            result: runResult,
-            runDate: new Date().toLocaleString(),
-            unixTimestamp: Date.now(),
-            framework: k.getData("selected-framework") || "Unknown",
-            batteriesCollected: k.getData("total-collected") || 0,
-            scenariosCompleted: k.getData("scenario-progress") || 0,
-            score: getAnswerScorePercent(),
-            successfulAnswerScoreTotal: k.getData("successful-answer-score-total", 0) || 0,
-            hintsUsed: k.getData("hints-used") || 0,
-            chatHistory: k.getData("run-chat-log") || [],
-        };
+    const framework = params.get("framework")
+        || (k.getData("selected-framework") || "unknown").toLowerCase();
 
-    const jsonString = JSON.stringify(runData, null, 4);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
+    const runData = {
+        result: "ABORTED",
+        abortedFrom: "scenario",
+        runDate: new Date().toLocaleString(),
+        unixTimestamp: Date.now(),
+        framework,
+        batteriesCollected: k.getData("total-collected") || 0,
+        scenariosCompleted: k.getData("scenario-progress") || 0,
+        score: getAnswerScorePercent(),
+        successfulAnswerScoreTotal: k.getData("successful-answer-score-total", 0) || 0,
+        hintsUsed: k.getData("hints-used") || 0,
+        chatHistory: k.getData("run-chat-log") || [],
+    };
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ethical_game_log_${runResult}_${Date.now()}.json`;
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    k.setData("log-downloaded", true);
+    fetch("/api/gamelogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, logs: runData }),
+        keepalive: true,
+    }).catch((err) => console.error("Failed to report aborted run:", err));
 }
 
 export default function scenario() {
@@ -1550,7 +1553,7 @@ export default function scenario() {
     const goBackToMenu = () => {
         if (isAbortingToMenu) return;
         isAbortingToMenu = true;
-        exportRunLog("ABORTED");
+        reportAbortedRun();
         cleanupScenarioDom();
         resetRunData();
         k.go("main-menu");
