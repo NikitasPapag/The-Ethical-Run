@@ -299,12 +299,19 @@ app.post('/api/post_submit', async (req, res) => {
         </head>
         <body>
             <audio id="click-sound" src="/click.wav" preload="auto"></audio>
-            <div class="form-group" style="text-align: center; margin-top: 100px;">
+            <div class="form-group" style="text-align: center; margin-top: 40px;">
                 <h1 class="title-finish" style="margin-bottom: 30px;">EXPERIMENT CONCLUDED</h1>
-                <p style="color: #dddddd; margin-bottom: 40px;">
+                <p style="color: #dddddd; margin-bottom: 35px;">
                     Simulation and feedback successfully recorded.<br><br>
                     Thank you for your vital contribution to this research.
                 </p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; max-width: 720px; margin: 0 auto 40px auto; padding: 25px 0; border-top: 2px dashed #555555; border-bottom: 2px dashed #555555;">
+                    <p style="color: #dddddd; margin: 0; flex: 1; min-width: 260px; text-align: left;">
+                        If you want to access the game again remotely, scan this QR code:
+                    </p>
+                    <img src="/qr-code.png" alt="QR code to access The Ethical Run online"
+                         style="width: 180px; height: 180px; background-color: #ffffff; padding: 8px; border-radius: 8px; image-rendering: pixelated; flex-shrink: 0;">
+                </div>
                 ${exploreButton}
                 <button type="button" class="btn-nav" style="max-width: 550px; margin: 0 auto; font-size: 16px; line-height: 1.8;"
                         onclick="navigateWithClick('/')">
