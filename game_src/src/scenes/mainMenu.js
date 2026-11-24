@@ -68,8 +68,8 @@ export default function mainMenu() {
     ]);
 
     const startText = uiContainer.add([
-        k.text("Press Space/Click/Touch to Play", { font: "mania", size: 60}),
-        k.pos(k.center().x, k.center().y - 300),
+        k.text("Press Space/Click/Touch to Play", { font: "mania", size: 72}),
+        k.pos(k.center().x, k.center().y - 280),
         k.anchor("center"),
         k.opacity(1)
     ]);

@@ -492,7 +492,8 @@ app.get('/api/admin/export-csv', (req, res) => {
         "time_consent", "time_framework_select", "time_demographics",
         "time_pre_s1", "time_pre_s2", "time_pre_s3", "time_pre_s4", "time_pre_total",
         "time_post_s1", "time_post_s2", "time_post_s3", "time_post_s4", "time_post_total",
-        "time_sam_feedback", "time_cuq_feedback"
+        "time_sam_feedback", "time_cuq_feedback",
+        "help_pre_s1", "help_pre_s2", "help_pre_s3", "help_pre_s4", "help_pre_total"
     ];
 
     const rows = [headers.join(",")];
@@ -539,6 +540,14 @@ app.get('/api/admin/export-csv', (req, res) => {
                     post.time_post_scenario_1, post.time_post_scenario_2,
                     post.time_post_scenario_3, post.time_post_scenario_4
                 ].reduce((acc, v) => acc + (parseFloat(v) || 0), 0).toFixed(2);
+
+                const hasPreHelpTracking = pre.help_clicks_pre_scenario_1 !== undefined;
+                const preHelpTotal = hasPreHelpTracking
+                    ? [
+                        pre.help_clicks_pre_scenario_1, pre.help_clicks_pre_scenario_2,
+                        pre.help_clicks_pre_scenario_3, pre.help_clicks_pre_scenario_4
+                    ].reduce((acc, v) => acc + (parseInt(v, 10) || 0), 0)
+                    : "";
 
                 const gameDurationSec = (game.durationSeconds != null)
                     ? game.durationSeconds
@@ -596,9 +605,14 @@ app.get('/api/admin/export-csv', (req, res) => {
                     post.time_post_scenario_4 || "",
                     postTimeTotal,
                     fb.time_sam_feedback || "",
-                    fb.time_cuq_feedback || ""
+                    fb.time_cuq_feedback || "",
+                    pre.help_clicks_pre_scenario_1 ?? "",
+                    pre.help_clicks_pre_scenario_2 ?? "",
+                    pre.help_clicks_pre_scenario_3 ?? "",
+                    pre.help_clicks_pre_scenario_4 ?? "",
+                    preHelpTotal
                 ].map(val => `"${String(val).replace(/"/g, '""')}"`);
-
+                
                 rows.push(row.join(","));
             });
         } catch (err) {
