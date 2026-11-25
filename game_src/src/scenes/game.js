@@ -26,8 +26,8 @@ export default function game() {
 
     const BASE_GAME_SPEED = 600;
     const GAME_SPEED_STEP = 40;
-    const GAME_SPEED_LOOP_SECONDS = 1.2;
-    const MAX_GAME_SPEED = 2200;
+    const GAME_SPEED_LOOP_SECONDS = 1.5;
+    const MAX_GAME_SPEED = 2000;
 
     // --- ESCAPE / SWIPE BACK TO MENU ---
     
