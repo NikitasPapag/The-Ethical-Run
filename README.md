@@ -2,7 +2,7 @@
 
 An interactive web platform and 2D educational game developed to evaluate whether Socratic dialogue with a large language model can help students understand and apply moral philosophy frameworks.
 
-This project was created as part of a diploma thesis at the Department of Computer Engineering and Informatics, University of Patras.
+This project was created as part of a diploma thesis at the Department of Computer Engineering and Informatics, University of Patras. This public repository hosts the experiment version of the game, made to evaluate its educational efficacy. You can access this version on https://the-ethical-run.onrender.com and the full game on https://nikitaspapag.itch.io/the-ethical-run.
 
 ## Overview
 
