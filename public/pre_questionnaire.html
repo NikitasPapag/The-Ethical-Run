@@ -10,6 +10,21 @@
         let currentStage = 0; 
         let stageStartTime = Date.now();
 
+        const stageTimeMs = {};
+        let isSubmitting = false;
+
+        function accumulateCurrentStageTime() {
+            const now = Date.now();
+            const elapsed = Math.max(0, now - stageStartTime);
+            stageTimeMs[currentStage] = (stageTimeMs[currentStage] || 0) + elapsed;
+            stageStartTime = now;
+
+            const timeInput = document.getElementById('time_stage_' + currentStage);
+            if (timeInput) {
+                timeInput.value = (stageTimeMs[currentStage] / 1000).toFixed(2);
+            }
+        }
+
         const PRE_SCENARIO_BANK = {
             utilitarianism: [
                 {
@@ -352,8 +367,7 @@
             checkboxes.forEach(cb => { if (!cb.checked) allValid = false; });
             
             if (allValid) {
-                const timeInput = document.getElementById('time_stage_' + currentStage);
-                if (timeInput) timeInput.value = ((Date.now() - stageStartTime) / 1000).toFixed(2); 
+                accumulateCurrentStageTime();
 
                 if (currentStage === 2) {
                     currentStage = 2.5;
@@ -370,6 +384,8 @@
 
         function prevStage() {
             playClick();
+            accumulateCurrentStageTime();
+
             if (currentStage === 3) {
                 currentStage = 2.5;
             } else if (currentStage === 2.5) {
@@ -382,7 +398,7 @@
 
         function selectFramework(fwId) {
             playClick();
-            document.getElementById('time_stage_1').value = ((Date.now() - stageStartTime) / 1000).toFixed(2);
+            accumulateCurrentStageTime();
             document.getElementById('selected-framework').value = fwId;
             
             const fwNames = {
@@ -403,9 +419,13 @@
 
             renderPreScenarios(fwId);
 
+            // Reset scenario timers and help counters whenever a framework is selected/re-selected
             for (let s = 3; s <= 6; s++) {
-                const el = document.getElementById('help_clicks_stage_' + s);
-                if (el) el.value = "0";
+                stageTimeMs[s] = 0;
+                const timeEl = document.getElementById('time_stage_' + s);
+                if (timeEl) timeEl.value = "0.00";
+                const helpEl = document.getElementById('help_clicks_stage_' + s);
+                if (helpEl) helpEl.value = "0";
             }
 
             // Move from Stage 1 (Framework Menu) -> Stage 2 (Player Profiling)
@@ -414,10 +434,12 @@
         }
 
         function submitPreForm() {
+            if (isSubmitting) return;
             playClick();
             const currentDiv = document.getElementById('stage-' + currentStage);
             if (currentDiv.querySelector('input[name="pre_scenario_4"]:checked')) {
-                document.getElementById('time_stage_6').value = ((Date.now() - stageStartTime) / 1000).toFixed(2);
+                isSubmitting = true;
+                accumulateCurrentStageTime();
                 // Short 150ms delay so the click sound finishes playing before page redirect
                 setTimeout(() => {
                     document.getElementById('experiment-form').submit();

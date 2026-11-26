@@ -11,6 +11,21 @@
         let stageStartTime = Date.now();
         let isFinalRun = false;
 
+        const stageTimeMs = {};
+        let isSubmitting = false;
+
+        function accumulateCurrentStageTime() {
+            const now = Date.now();
+            const elapsed = Math.max(0, now - stageStartTime);
+            stageTimeMs[currentStage] = (stageTimeMs[currentStage] || 0) + elapsed;
+            stageStartTime = now;
+
+            const timeInput = document.getElementById('time_stage_' + currentStage);
+            if (timeInput) {
+                timeInput.value = (stageTimeMs[currentStage] / 1000).toFixed(2);
+            }
+        }
+
         const POST_SCENARIO_BANK = {
             utilitarianism: [
                 {
@@ -339,9 +354,14 @@
         }
 
         function recordCurrentStageTime() {
+            const now = Date.now();
+            const elapsed = Math.max(0, now - stageStartTime);
+            stageTimeMs[currentStage] = (stageTimeMs[currentStage] || 0) + elapsed;
+            stageStartTime = now;
+
             const timeInput = document.getElementById('time_stage_' + currentStage);
             if (timeInput) {
-                timeInput.value = ((Date.now() - stageStartTime) / 1000).toFixed(2);
+                timeInput.value = (stageTimeMs[currentStage] / 1000).toFixed(2);
             }
         }
 
@@ -358,13 +378,16 @@
 
         function prevStage() {
             playClick();
+            recordCurrentStageTime();
             currentStage = (currentStage === 1) ? 0.5 : currentStage - 1;
             showStage(currentStage);
         }
 
         function submitForm() {
+            if (isSubmitting) return;
             playClick();
             if (validateCurrentStage()) {
+                isSubmitting = true;
                 recordCurrentStageTime();
                 // Short 150ms delay so the click sound finishes playing before page redirect
                 setTimeout(() => {
